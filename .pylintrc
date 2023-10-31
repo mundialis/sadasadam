@@ -1,0 +1,39 @@
+# For documentation about this config, see
+# https://pylint.readthedocs.io/en/stable/user_guide/configuration/all-options.html (as of writing, version 2.17.4)
+
+[MAIN]
+
+jobs=0 # Default: 1
+
+load-plugins=
+        pylint.extensions.broad_try_clause
+
+recursive=yes # Default: False
+
+# reports=yes # Default: False
+
+# score=no # Default: True
+
+# To disable more rules, see output of pylint. E.g.
+# [...] C0301: Line too long (89/80) (line-too-long)
+# can be surpressed with either disable=line-too-long or disable=C
+# It is also possible to ignore a specific line by adding
+# # pylint: disable=broad-exception-caught
+# above the line causing the lint error
+disable=
+        W, ; all Warnings are allowed to fail
+        import-error, ; To surpress e.g "Unable to import 'grass.script"
+        missing-module-docstring, ; we use the GRASS GIS header
+        R, ; refactoring + design recommendations
+
+
+[BROAD_TRY_CLAUSE]
+max-try-statements=4 # Default: 1
+
+[FORMAT]
+max-line-length=80 # Default: 100
+max-module-lines=800 # Default: 1000
+ignore-long-lines=.*COPYRIGHT:.* |# . description:.*|\s*(# )?.*http.:\/\/\S+?|# %%*
+
+[VARIABLES]
+additional-builtins=_ # Default: ()

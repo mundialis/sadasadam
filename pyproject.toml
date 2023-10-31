@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+sadasadam = "sadasadam.cli:main"
+
+[project]
+name = "sadasadam"
+version = "0.1.0"
+authors = [
+  { name="Guido Riembauer", email="riembauer@mundialis.de" },
+  { name="Momen Mawad", email="mawad@mundialis.de" },
+]
+maintainers = [{name="mundialis GmbH & Co. KG", email="info@mundialis.de"}]
+description = "This library provides a command line tool to download and process optical data from satellites to generate SAme DAy SAtellite DAta Mosaics"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "eodag",
+  "gdal",
+  "gdal-utils",
+  "pyyaml",
+  "requests",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/mundialis/sadasadam"
+"Bug Tracker" = "https://github.com/mundialis/sadasadam"
+

@@ -1,0 +1,91 @@
+############################################################################
+#
+# MODULE:      sadasadam config_example.yaml
+# AUTHOR(S):   Momen Mawad, Guido Riembauer
+#
+# PURPOSE:     Config file for sadasadam
+# COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+#############################################################################
+
+# type=float, help='Northern boundary of AOI in decimal degrees'
+north: 46.6
+
+# type=float, help='Southern boundary of AOI in decimal degrees'
+south: 45.67
+
+# type=float, help='Eastern boundary of AOI in decimal degrees'
+east: 11.97
+
+# type=float, help='Western boundary of AOI in decimal degrees'
+west: 10.44
+
+# type=str, help='Start date of temporal extent in ISO format (YYYY-MM-DD)'
+start: '2023-08-01'
+
+# type=str, help='End date of temporal extent ISO format (YYYY-MM-DD)'
+end: '2023-08-15'
+
+# type=int, help='Max. cloud cover (1-100) of scenes to download.'
+cloud_cover: 100
+
+# type=str, help='Path to folder where output is stored'
+output_dir: '/path/to/output/dir/'
+
+# type=str, help='Path to download products. Needs to be the same as defined in the eodag config file'
+download_dir: '/path/to/download/dir/'
+
+# type=str, help='Path to folder where FORCE processing is done'
+temp_force_dir: '/path/to/temp_force/dir/'
+
+# type=str, help='Path to folder where the Water Vapor Database is stored permanently (also for several runs). It can be an empty folder for sadasadam will fetch the data online.'
+wvdb_dir: '/path/to/wvdb/dir/'
+
+# type=str, help='Path to DEM file used for FORCE'
+dem_path: '/path/to/file.tif'
+
+# type=int, help='EPSG code of target projection'
+target_proj_epsg: 25832
+
+# type=str, help='Path to FORCE parameter file, this file will be used to overwrite default
+# parameters of FORCE'. Set to 'None' if you don't want to use a force parameter file
+# force_param_file: 'None'
+force_param_file: '/path/to/force-parameter-file.cfg'
+
+# type=int, help='Each input scene in FORCE uses one process, each process may use
+# multiple threads. In general, it is most efficient to use as much multi-
+# processing as possible (i.e. n_threads = 1 or 2). Must be defined if no force_param_file is given'
+n_procs_force: 1
+n_threads_force: 2
+
+# type=int, help='Cloud buffer in meters. Must be defined if no force_param_file is given'
+cloud_buffer: 300
+
+# type=int, help='Number of processes for postprocessing with GDAL (no multithreading available).'
+n_procs_postprocessing: 1
+
+# type=bool, help='If True, the quality assurance information (QAI) by FORCE will be saved'
+save_qai: False
+
+# type=bool, help='If True, the FORCE temp data will be removed after processing.'
+remove_force_data: True
+
+# type=bool, help='If True, the download directory will be cleared after processing'
+clear_download: True
+
+# type=bool, help='If True, only the download of data with no further processing will be done'
+download_only: False
+
+# type=bool, help='If True, only the FORCE processing and postprocessing will be done. This requires that satellite
+# data is available in download_dir'
+force_only: False
