@@ -51,7 +51,7 @@ when installing SADASADAM (see next section)
 SADASADAM can be installed as follows:
 
 ```
-# clone this repository
+# clone the repository from github
 git clone git@github.com:mundialis/sadasadam.git
 
 # change dir into the repository and run pip
