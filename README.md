@@ -67,14 +67,14 @@ The steps above will automatically install the Python library [eodag](https://eo
 Before running SADASADAM, eodag needs to be configured (see [eodag documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html)).
 The eodag config file needs to be filled with credentials for satellite data providers. SADASADAM calls eodag to download only Sentinel-2
 and Landsat-8/9 Level 1C data. Therefore, providing credentials to the `cop_dataspace` and `usgs` sections of the eodag config file
-is recommended. In order to make the downloaded data accessible to FORCE, the download path `outputs_prefix` of the eodag config file
-needs to be defined in the SADASADAM config file parameter `download_dir` as well (see below). It is recommended to define `extract: False` in the
-eodag config file as SADASADAM automatically extracts the downloaded data according to the input requirements of FORCE.
+is recommended. In order to make the downloaded data accessible to FORCE,
+**the download path `outputs_prefix` of the eodag config file needs to be defined in the SADASADAM config file parameter `download_dir` as well**
+(see below). It is recommended to define `extract: False` in the eodag config file as SADASADAM automatically extracts the downloaded data according to the input requirements of FORCE.
 
 A priority of providers can be defined in the eodag config file. We noticed the unexpected behaviour that download of Sentinel-2
-from `cop_dataspace` fails, if both `cop_dataspace` and `usgs` have the same priority. A functioning workaround seems to be to
-set the priority of `cop_dataspace` to 2, and that of `usgs` to 1 - this way both Sentinel-2 and Landsat download worked in our
-tests.
+from `cop_dataspace` fails (error related to `peps` provider credentials), if both `cop_dataspace` and `usgs` have the same priority.
+A functioning workaround seems to be to **set the priority of `cop_dataspace` to 2, and that of `usgs` to 1** - this way both Sentinel-2 and
+Landsat download worked in our tests.
 
 # Usage
 
@@ -182,7 +182,7 @@ clear_download: True  # Will clear the content of the download directory <downlo
 download_only: False  # You may use SADASADAM to simply download satellite data without any further processing,
                       # in which case this parameter can be set to True.
 force_only: False     # Setting this parameter to True skips the download and directly starts with FORCE processing
-                      # and postprocessing, assuming there is satellite data in <download_dir>. 
+                      # and postprocessing, assuming there is satellite data in <download_dir>.
 ```
 
 ### Running SADASADAM
