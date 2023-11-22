@@ -1,0 +1,20 @@
+Bootstrap: docker
+From: davidfrantz/force
+
+%help
+    Singularity container to install FORGE, GDAL and sadasadam
+
+%labels
+    Maintainer Luca Delucchi
+
+%files
+    * /sadasadam/
+
+%post
+    apt install ipython3
+    # install SADASADAM
+    cd /sadasadam/
+    pip install .
+
+%runscript
+    sadasadam --help
