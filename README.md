@@ -195,3 +195,25 @@ sadasadam --config /path/to/sadasadam_conf_file.yaml
 
 Note: This will start the entire process (data download, FORCE processing, postprocessing) and may take a lot of time
 depending on data filtering and parallelization options defined in the config file.
+
+#### Using SADASADAM with Singularity
+
+Singularity is a free and open source container platform released with BSD license.
+
+To run SADASADAM with Singularity you need first to create the container using the `sadasadam.def` receipt file. To build the container image you need to be root.
+
+```commandline
+sudo singularity build sadasadam.simg sadasadam.def
+```
+
+At this point it is possible to run SADASADAM into the created container.
+
+```commandline
+singularity exec sadasadam.simg sadasadam --config config.yaml
+```
+
+If you need to pass the EODAG configuration file you can use the `EODAG_CFG_FILE` environmental variable as written in [EODAG documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html#yaml-user-configuration-file)
+
+```commandline
+singularity exec --env EODAG_CFG_FILE=/PATH/TO/eodag.yml sadasadam.simg sadasadam --config config.yaml
+```
