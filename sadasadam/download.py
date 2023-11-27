@@ -57,8 +57,8 @@ def download_with_eodag(
         sitem for item in total_search_results for sitem in item
     ]
     print(
-        f"Found {len(total_search_results_flat)} matching scenes of type {product_type}, "
-        "starting download..."
+        f"Found {len(total_search_results_flat)} matching scenes "
+        "of type {product_type}, starting download..."
     )
     dag.download_all(total_search_results_flat, outputs_prefix=download_dir)
 
@@ -110,7 +110,7 @@ def extract_and_delete_tar_gz_files(directory):
                 elif file.endswith(".SAFE"):
                     # this should fail if the .SAFE is a corrupt
                     # downloaded file and not previously extracted
-                    test = os.listdir(file_path)
+                    os.listdir(file_path)
                     unpack = False
 
                 if unpack is True:
@@ -118,7 +118,7 @@ def extract_and_delete_tar_gz_files(directory):
                 # Delete file after extraction
                 os.remove(file_path)
             except Exception as exception:
-                print(warning_text)
+                print(f"{exception}: {warning_text}")
                 corrupt_files.append(file_path)
                 os.remove(file_path)
                 if landsat_extract_dir:
