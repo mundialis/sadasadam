@@ -112,8 +112,7 @@ def extract_and_delete_tar_gz_files(directory):
                 if remove is True:
                     os.remove(file_path)
             except Exception as exception:
-                exception = None
-                print(warning_text)
+                print(f"{warning_text}: {exception}")
                 corrupt_files.append(file_path)
                 os.remove(file_path)
                 if landsat_extract_dir:
