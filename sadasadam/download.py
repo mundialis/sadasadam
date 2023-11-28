@@ -35,8 +35,6 @@ def download_with_eodag(
     # initialize eodag
     dag = EODataAccessGateway()
     # search for products
-    # iterate over pages because search_all does not return anything
-    total_search_results = []
     items_per_page = 20
     search_kwargs = {
         "items_per_page": items_per_page,
@@ -45,22 +43,15 @@ def download_with_eodag(
         "start": start_date,
         "end": end_date,
         "cloudCover": cloudcover,
-        "raise_errors": True,
     }
-    search_results_tmp, total_count = dag.search(**search_kwargs)
+    search_results = dag.search_all(**search_kwargs)
+    num_results = len(search_results)
     # iterate over pages
-    pages = int(total_count // items_per_page + 1)
-    for i in range(1, pages + 1):
-        search_results, total_count = dag.search(page=i, **search_kwargs)
-        total_search_results.append(search_results)
-    total_search_results_flat = [
-        sitem for item in total_search_results for sitem in item
-    ]
     print(
-        f"Found {len(total_search_results_flat)} matching scenes "
-        "of type {product_type}, starting download..."
+        f"Found {num_results} matching scenes "
+        f"of type {product_type}, starting download..."
     )
-    dag.download_all(total_search_results_flat, outputs_prefix=download_dir)
+    dag.download_all(search_results, outputs_prefix=download_dir)
 
 
 def extract_and_delete_tar_gz_files(directory):
@@ -78,6 +69,7 @@ def extract_and_delete_tar_gz_files(directory):
                 "Retrying Download..."
             )
             landsat_extract_dir = None
+            remove = True
             try:
                 if file.endswith(".tar.gz"):
                     landsat_extract_dir_name = file.split(".")[0]
@@ -112,13 +104,16 @@ def extract_and_delete_tar_gz_files(directory):
                     # downloaded file and not previously extracted
                     os.listdir(file_path)
                     unpack = False
+                    remove = False
 
                 if unpack is True:
                     shutil.unpack_archive(file_path, extract_dir=target_dir)
                 # Delete file after extraction
-                os.remove(file_path)
+                if remove is True:
+                    os.remove(file_path)
             except Exception as exception:
-                print(f"{exception}: {warning_text}")
+                exception = None
+                print(warning_text)
                 corrupt_files.append(file_path)
                 os.remove(file_path)
                 if landsat_extract_dir:
@@ -159,3 +154,9 @@ def download_and_extract(
         count += 1
         if count == max_tries:
             run_download = False
+            if len(corrupt_files) > 0:
+                print(
+                    f"Scene/s {'; '.join(corrupt_files)} seem to be "
+                    f"corrupt even after {max_tries} downloads. "
+                    "Files are removed and processing continues without them"
+                )

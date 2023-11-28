@@ -31,10 +31,10 @@ east: 11.97
 west: 10.44
 
 # type=str, help='Start date of temporal extent in ISO format (YYYY-MM-DD)'
-start: '2023-08-05'
+start: '2023-08-01'
 
 # type=str, help='End date of temporal extent ISO format (YYYY-MM-DD)'
-end: '2023-08-10'
+end: '2023-08-15'
 
 # type=int, help='Max. cloud cover (1-100) of scenes to download.'
 cloud_cover: 100
