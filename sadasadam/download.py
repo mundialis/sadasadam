@@ -46,7 +46,6 @@ def download_with_eodag(
     }
     search_results = dag.search_all(**search_kwargs)
     num_results = len(search_results)
-    # iterate over pages
     print(
         f"Found {num_results} matching scenes "
         f"of type {product_type}, starting download..."
