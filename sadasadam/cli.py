@@ -26,10 +26,7 @@ import shutil
 import yaml
 
 from sadasadam.force import ForceProcess
-from sadasadam.download import (
-    download_with_eodag,
-    extract_and_delete_tar_gz_files,
-)
+from sadasadam.download import download_and_extract
 
 
 def check_bool(variable):
@@ -213,20 +210,17 @@ def main():
                 "lonmax": east,
                 "latmax": north,
             }
-
             # start the download process
-            for product_name in products:
-                download_with_eodag(
-                    product_type=product_name,
-                    geom=geom,
-                    start_date=start,
-                    end_date=end,
-                    cloudcover=cloud_cover,
-                )
-
+            download_and_extract(
+                products=products,
+                geom=geom,
+                start_date=start,
+                end_date=end,
+                cloudcover=cloud_cover,
+                download_dir=download_dir,
+            )
         # Start FORCE
         if download_only is False:
-            extract_and_delete_tar_gz_files(download_dir)
             print("Setting up FORCE processing...")
             # start FORCE process
             force_proc = ForceProcess(

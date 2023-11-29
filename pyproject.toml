@@ -7,7 +7,7 @@ sadasadam = "sadasadam.cli:main"
 
 [project]
 name = "sadasadam"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   { name="Guido Riembauer", email="riembauer@mundialis.de" },
   { name="Momen Mawad", email="mawad@mundialis.de" },

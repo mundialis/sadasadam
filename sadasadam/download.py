@@ -23,43 +23,52 @@
 
 import os
 import shutil
+import zipfile
 
 from eodag import EODataAccessGateway
 
 
 def download_with_eodag(
-    product_type, geom, start_date, end_date, cloudcover=100
+    product_type, geom, start_date, end_date, download_dir, cloudcover=100
 ):
     """Function to download satellite data using eodag library"""
     # initialize eodag
     dag = EODataAccessGateway()
     # search for products
-
-    search_results, total_count = dag.search(
-        productType=product_type,
-        # accepts WKT polygons, shapely.geometry, ...
-        geom=geom,
-        start=start_date,
-        end=end_date,
-        # Set cloud cover
-        cloudCover=cloudcover,
-        raise_errors=True,
-    )
+    items_per_page = 20
+    search_kwargs = {
+        "items_per_page": items_per_page,
+        "productType": product_type,
+        "geom": geom,
+        "start": start_date,
+        "end": end_date,
+        "cloudCover": cloudcover,
+    }
+    search_results = dag.search_all(**search_kwargs)
+    num_results = len(search_results)
     print(
-        f"Found {total_count} matching scenes of type {product_type}, "
-        "starting download..."
+        f"Found {num_results} matching scenes "
+        f"of type {product_type}, starting download..."
     )
-    dag.download_all(search_results)
+    dag.download_all(search_results, outputs_prefix=download_dir)
 
 
 def extract_and_delete_tar_gz_files(directory):
     """
-    Function to extract .tar.gz files recursively from a directory
-    and delete them
+    Function to extract .tar.gz and .SAFE.zip files
+    recursively from a directory and delete them
     """
+    corrupt_files = []
     for file in os.listdir(directory):
-        if file.endswith((".SAFE.zip", ".tar.gz")):
+        if file.endswith((".SAFE.zip", ".tar.gz", ".SAFE")):
             file_path = os.path.join(directory, file)
+            warning_text = (
+                "Warning: - "
+                f"Unable to extract: {file_path}. "
+                "Retrying Download..."
+            )
+            landsat_extract_dir = None
+            remove = True
             try:
                 if file.endswith(".tar.gz"):
                     landsat_extract_dir_name = file.split(".")[0]
@@ -75,18 +84,77 @@ def extract_and_delete_tar_gz_files(directory):
                         directory, landsat_extract_dir_name
                     )
 
-                    # Extract the .tar.gz file to the created directory
-                    shutil.unpack_archive(
-                        file_path, extract_dir=landsat_extract_dir
-                    )
+                    target_dir = landsat_extract_dir
+                    unpack = True
 
                 elif file.endswith(".SAFE.zip"):
-                    shutil.unpack_archive(file_path, extract_dir=directory)
-                    # Delete the .tar.gz file after extraction
-                os.remove(file_path)
+                    zfile = zipfile.ZipFile(file_path)
+                    zfile_test = zfile.testzip()
+                    if zfile_test is not None:
+                        print(warning_text)
+                        corrupt_files.append(file_path)
+                        unpack = False
+                    else:
+                        target_dir = directory
+                        unpack = True
+
+                elif file.endswith(".SAFE"):
+                    # this should fail if the .SAFE is a corrupt
+                    # downloaded file and not previously extracted
+                    os.listdir(file_path)
+                    unpack = False
+                    remove = False
+
+                if unpack is True:
+                    shutil.unpack_archive(file_path, extract_dir=target_dir)
+                # Delete file after extraction
+                if remove is True:
+                    os.remove(file_path)
             except Exception as exception:
-                print(
-                    f"Warning: {exception} - "
-                    "Unable to extract or delete: {file_path}"
-                )
+                print(f"{warning_text}: {exception}")
+                corrupt_files.append(file_path)
+                os.remove(file_path)
+                if landsat_extract_dir:
+                    shutil.rmtree(landsat_extract_dir)
                 continue
+
+    return corrupt_files
+
+
+def download_and_extract(
+    products,
+    geom,
+    start_date,
+    end_date,
+    download_dir,
+    cloudcover=100,
+    max_tries=3,
+):
+    """
+    Function to download satellite data using eodag library, extract,
+    and retry download if files are corrupt
+    """
+    run_download = True
+    count = 0
+    while run_download is True:
+        for product_name in products:
+            download_with_eodag(
+                product_type=product_name,
+                geom=geom,
+                start_date=start_date,
+                end_date=end_date,
+                cloudcover=cloudcover,
+                download_dir=download_dir,
+            )
+        corrupt_files = extract_and_delete_tar_gz_files(download_dir)
+        if len(corrupt_files) == 0:
+            run_download = False
+        count += 1
+        if count == max_tries:
+            run_download = False
+            if len(corrupt_files) > 0:
+                print(
+                    f"Scene/s {'; '.join(corrupt_files)} seem to be "
+                    f"corrupt even after {max_tries} downloads. "
+                    "Files are removed and processing continues without them"
+                )
