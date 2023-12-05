@@ -50,7 +50,7 @@ RUN apt-get -y install \
 # Set python aliases for Python 3.x
 echo 'alias python=python3' >> ~/.bashrc \
   && echo 'alias pip=pip3' >> ~/.bashrc \
-  && . ~/.bashrc
+  && source ~/.bashrc
 #
 # NumPy is needed for OpenCV, gsutil for level1-csd, landsatlinks for level1-landsat (requires gdal/requests/tqdm)
 RUN pip3 install --no-cache-dir --upgrade pip && \
