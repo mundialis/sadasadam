@@ -6,6 +6,9 @@
 
 FROM ubuntu:22.04 as builder
 
+LABEL version="0.1"
+LABEL description="This is a docker file to run sadasadam with last FORCE and GDAL 3.4.1"
+
 # disable interactive frontends
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -46,13 +49,9 @@ RUN apt-get -y install \
   python3-gdal \
   pandoc \
   r-base \
-  aria2 && \
-# Set python aliases for Python 3.x
-echo 'alias python=python3' >> ~/.bashrc \
-  && echo 'alias pip=pip3' >> ~/.bashrc \
-  && source ~/.bashrc
-#
-# NumPy is needed for OpenCV, gsutil for level1-csd, landsatlinks for level1-landsat (requires gdal/requests/tqdm)
+  aria2
+
+# gsutil for level1-csd, landsatlinks for level1-landsat (requires gdal/requests/tqdm)
 RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir  \
         gsutil \
@@ -162,6 +161,12 @@ WORKDIR $SADA_DIR
 COPY --chown=docker:docker . .
 
 RUN export -p
+
+RUN export GDAL_VER=$(gdal-config --version); echo $GDAL_VER && \
+    sed -i -e "s/gdal-utils/gdal-utils == $GDAL_VER/g" pyproject.toml && \
+    sed -i "s/\"gdal\"/\"gdal == $GDAL_VER\"/g" pyproject.toml
+
+RUN cat pyproject.toml
 
 RUN pip install .
 
