@@ -13,13 +13,14 @@ LABEL description="This is a docker file to run sadasadam with last FORCE and GD
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Refresh package list & upgrade existing packages
-RUN apt-get -y update && apt-get -y upgrade && \
+RUN apt-get -y update && apt-get -y dist-upgrade && \
 # Add PPA for Python 3.x and R 4.0
 apt -y install software-properties-common dirmngr && \
 apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9 && \
 add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -sc)-cran40/"
 
 RUN apt-get -y install \
+  bash \
   wget \
   unzip \
   dos2unix \
@@ -50,6 +51,8 @@ RUN apt-get -y install \
   pandoc \
   r-base \
   aria2
+
+RUN ln -sf /bin/bash /bin/sh
 
 # gsutil for level1-csd, landsatlinks for level1-landsat (requires gdal/requests/tqdm)
 RUN pip3 install --no-cache-dir --upgrade pip && \
