@@ -149,8 +149,8 @@ save_qai: False                                 # Whether or not the FORCE Quali
 The following parameters of the SADASADAM config file are steering FORCE processing in the FORCE parameter file (see [FORCE tutorial](https://force-eo.readthedocs.io/en/latest/howto/l2-ard.html#parameterization)):
 
 ```
-dem_path: '/path/to/a/local/dem.tif'            # Path to a local digital elevation model used for topographic correction. It is recommended to use a DEM with an extent larger than
-                                                # the AOI as FORCE processes the entire scenes.
+dem_path: '/path/to/a/local/dem.tif'            # Path to a local digital elevation model used for topographic correction. It is required to use a DEM with an extent larger than
+                                                # the AOI as FORCE processes the entire scenes. The DTM has to cover entirely all the scenes.
 n_procs_force: 4                                # Number of parallel processes for FORCE. FORCE uses a multiprocessing/multithreading approach. The best combination of processes
                                                 # and threads heavily depends on your system and the amount/size of scenes to process  (see also FORCE Level 2 ARD tutorial for recommendations).
 n_threads_force: 2                              # Number of threads per process for multithreading in FORCE.
