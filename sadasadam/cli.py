@@ -21,12 +21,59 @@
 ############################################################################
 
 import argparse
+from datetime import datetime
 import os
 import shutil
 import yaml
 
 from sadasadam.force import ForceProcess
 from sadasadam.download import download_and_extract
+
+
+def check_filter(start, end, north, south, east, west):
+    """
+    Helper function that checks whether the date and coordinate fields
+    from the config file make sense.
+    """
+    north_f = float(north)
+    south_f = float(south)
+    east_f = float(east)
+    west_f = float(west)
+    start_date = datetime.strptime(start, "%Y-%m-%d")
+    end_date = datetime.strptime(end, "%Y-%m-%d")
+    if north_f < -90 or north_f > 90:
+        raise Exception(
+            f"The value for north {north} is outside the valid"
+            " -90 to 90 degree range."
+        )
+    if south_f < -90 or south_f > 90:
+        raise Exception(
+            f"The value for south {south} is outside the valid"
+            " -90 to 90 degree range."
+        )
+    if south_f > north_f:
+        raise Exception(
+            f"The value for south {south} is larger than for north {north}"
+        )
+    if east_f < -360 or east_f > 360:
+        # best would be -180 to 180 but -350 etc. should also be understood
+        raise Exception(
+            f"The value for east {east} is outside the valid"
+            " -360 to 360 degree range."
+        )
+    if west_f < -360 or west_f > 360:
+        # best would be -180 to 180 but -350 etc. should also be understood
+        raise Exception(
+            f"The value for west {west} is outside the valid"
+            " -360 to 360 degree range."
+        )
+    if west_f > east_f:
+        raise Exception(
+            f"The value for west {west} is larger than for east {east}."
+        )
+
+    if start_date > end_date:
+        raise Exception(f"Start date {start} is later than end date {end}.")
 
 
 def check_bool(variable):
@@ -81,6 +128,14 @@ def main():
             raise Exception(
                 "Please provide an end date for the temporal extent"
             )
+        check_filter(
+            start=start,
+            end=end,
+            north=north,
+            south=south,
+            east=east,
+            west=west,
+        )
         cloud_cover = config.get("cloud_cover")
         if not cloud_cover:
             raise Exception("Please provide a maximum cloud cover")

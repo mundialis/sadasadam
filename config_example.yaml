@@ -21,13 +21,13 @@
 # type=float, help='Northern boundary of AOI in decimal degrees'
 north: 46.6
 
-# type=float, help='Southern boundary of AOI in decimal degrees'
+# type=float, help='Southern boundary of AOI in decimal degrees. Must be smaller than north'
 south: 45.67
 
 # type=float, help='Eastern boundary of AOI in decimal degrees'
 east: 11.97
 
-# type=float, help='Western boundary of AOI in decimal degrees'
+# type=float, help='Western boundary of AOI in decimal degrees. Must be smaller than east'
 west: 10.44
 
 # type=str, help='Start date of temporal extent in ISO format (YYYY-MM-DD)'
