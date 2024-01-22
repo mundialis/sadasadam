@@ -53,7 +53,7 @@ def check_filter(start, end, north, south, east, west):
         )
     if south_f > north_f:
         raise Exception(
-            f"The value for south {south} is larger " f"than for north {north}"
+            f"The value for south {south} is larger than for north {north}"
         )
     if east_f < -360 or east_f > 360:
         # best would be -180 to 180 but -350 etc. should also be understood
@@ -69,7 +69,7 @@ def check_filter(start, end, north, south, east, west):
         )
     if west_f > east_f:
         raise Exception(
-            f"The value for west {west} is " f"larger than for east {east}."
+            f"The value for west {west} is larger than for east {east}."
         )
 
     if start_date > end_date:
