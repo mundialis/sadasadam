@@ -109,9 +109,7 @@ class ForceProcess(object):
         """
         now_time = datetime.now()
         now_time_str = now_time.strftime("%Y%m%d_%H%M%S")
-        self.force_dir = makedirs(
-            os.path.join(temp_dir, f"force_dir_{now_time_str}")
-        )
+        self.force_dir = makedirs(os.path.join(temp_dir, f"force_dir_{now_time_str}"))
         if not level1_dir:
             self.level1_dir = makedirs(os.path.join(self.force_dir, "level1"))
         else:
@@ -120,9 +118,7 @@ class ForceProcess(object):
         self.log_dir = makedirs(os.path.join(self.force_dir, "log"))
         self.misc_dir = makedirs(os.path.join(self.force_dir, "misc"))
         self.param_dir = makedirs(os.path.join(self.force_dir, "param"))
-        self.provenance_dir = makedirs(
-            os.path.join(self.force_dir, "provenance")
-        )
+        self.provenance_dir = makedirs(os.path.join(self.force_dir, "provenance"))
         self.temp_dir = makedirs(os.path.join(self.force_dir, "temp_dir"))
         self.wvdb_dir = wvdb_dir
         self.queue_file = None
@@ -130,9 +126,7 @@ class ForceProcess(object):
         # the mosaic tool just takes a relative path as
         # input so both attributes are stored
         self.mosaic_dir_name = "mosaic"
-        self.mosaic_path = makedirs(
-            os.path.join(self.level2_dir, self.mosaic_dir_name)
-        )
+        self.mosaic_path = makedirs(os.path.join(self.level2_dir, self.mosaic_dir_name))
 
     def create_force_queue_file(self):
         """Creates a queue file needed for L2 processing for
@@ -149,15 +143,11 @@ class ForceProcess(object):
             file.writelines(lines_per_string)
         self.queue_file = queue_file
 
-    def __replace_in_config_file(
-        self, old_config_file, new_config_file, replace_lines
-    ):
+    def __replace_in_config_file(self, old_config_file, new_config_file, replace_lines):
         """Replaces lines in a FORCE config file"""
         replace_lines_keys = [item.split("= ")[0] for item in replace_lines]
         # create dict
-        replace_dict = dict(
-            map(lambda i, j: (i, j), replace_lines_keys, replace_lines)
-        )
+        replace_dict = dict(map(lambda i, j: (i, j), replace_lines_keys, replace_lines))
         # open file and replace lines
         updated_conf = ""
         with open(old_config_file, "r") as file:
@@ -216,9 +206,7 @@ class ForceProcess(object):
             replace_lines=replace_lines,
         )
 
-    def update_force_level2_config_file(
-        self, user_file, target_proj_epsg=None
-    ):
+    def update_force_level2_config_file(self, user_file, target_proj_epsg=None):
         """Updates a config file needed for L2 processing.
         It only updates the config file with the
         FORCE internal directories, the wkt for the projection string,
@@ -246,10 +234,7 @@ class ForceProcess(object):
         """Downloads the Water Vapor Database 2000-2020 for
         Landsat atmospheric correction.
         """
-        url = (
-            "https://zenodo.org/records/4468701/"
-            "files/wvp-global.tar.gz?download=1"
-        )
+        url = "https://zenodo.org/records/4468701/" "files/wvp-global.tar.gz?download=1"
         response = requests.get(url)
         if response.status_code != 200:
             raise Exception(
@@ -266,10 +251,7 @@ class ForceProcess(object):
                 tfile.extractall(target_dir)
             os.remove(target_file_path)
             self.wvdb_dir = target_dir
-            print(
-                "Water Vapor Database downloaded and "
-                f"extracted to {target_dir}"
-            )
+            print("Water Vapor Database downloaded and " f"extracted to {target_dir}")
 
     def setup_wvdb(self, target_dir):
         """Downloads the Water Vapor Database 2000-2020 for Landsat
@@ -370,9 +352,7 @@ class ForceProcess(object):
         for file in files_in_mosaic_dir:
             if file.endswith("BOA.vrt") or file.endswith("QAI.vrt"):
                 outfile_name_tmp = file.replace("BOA.vrt", "BOA_clipped.vrt")
-                outfile_name = outfile_name_tmp.replace(
-                    "QAI.vrt", "QAI_clipped.vrt"
-                )
+                outfile_name = outfile_name_tmp.replace("QAI.vrt", "QAI_clipped.vrt")
                 file_list = [
                     os.path.join(self.mosaic_path, file),
                     os.path.join(self.mosaic_path, outfile_name),
@@ -419,9 +399,7 @@ class ForceProcess(object):
             ]
             clearsky_cmd_list.append(clearsky_cmd)
             clearsky_files.append(clearsky_name)
-        run_subprocess_parallel(
-            cmd_list_list=clearsky_cmd_list, num_processes=n_procs
-        )
+        run_subprocess_parallel(cmd_list_list=clearsky_cmd_list, num_processes=n_procs)
 
         # then: use the binary clearsky map to mask out
         # non-clearsky areas in the BOA.tif
@@ -438,9 +416,7 @@ class ForceProcess(object):
                 # clearsky files (cloud masks) are required
                 # in the output as well
                 shutil.copy(clearsky_file, target_dir)
-                boa_file = clearsky_file.replace(
-                    "clearsky.tif", "BOA_clipped.vrt"
-                )
+                boa_file = clearsky_file.replace("clearsky.tif", "BOA_clipped.vrt")
                 out_boa_filename = os.path.basename(boa_file).replace(
                     "BOA_clipped.vrt", "BOA_clearsky.tif"
                 )
@@ -466,9 +442,7 @@ class ForceProcess(object):
                 # (need to be transformed from .vrt to Gtiff)
                 if save_qai is True:
                     qai_file = clipped_qai_files[i]
-                    qai_output_name = os.path.basename(qai_file).replace(
-                        ".vrt", ".tif"
-                    )
+                    qai_output_name = os.path.basename(qai_file).replace(".vrt", ".tif")
                     qai_output_file = os.path.join(target_dir, qai_output_name)
                     ds_gdal = gdal.Open(qai_file)
                     ds_gdal = gdal.Translate(

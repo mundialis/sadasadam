@@ -25,22 +25,28 @@ from sadasadam.force import makedirs
 from sadasadam.force import run_subprocess_parallel
 
 INDICES = {
-    "NDVI": {"name": "Normalized Difference Vegetation Index",
-             "formula": "((A.astype(float)-B)/(A.astype(float)+B))",
-             "Sentinel-2": {"A": 4, "B": 8},
-             "LANDSAT": {"A": 3, "B": 5}},
-    "NDSI": {"name": "Normalized Difference Snow Index",
-             "formula": "((A.astype(float)-B)/(A.astype(float)+B))",
-             "Sentinel-2": {"A": 3, "B": 11},
-             "LANDSAT": {"A": 4, "B": 6}},
-    "NDMI": {"name": "Normalized Difference Moisture Index",
-             "formula": {"((A.astype(float)-B)/(A.astype(float)+B))"},
-             "Sentinel-2": {"A": 8, "B": 11},
-             "LANDSAT": {"A": 5, "B": 6}}
+    "NDVI": {
+        "name": "Normalized Difference Vegetation Index",
+        "formula": "((A.astype(float)-B)/(A.astype(float)+B))",
+        "Sentinel-2": {"A": 4, "B": 8},
+        "LANDSAT": {"A": 3, "B": 5},
+    },
+    "NDSI": {
+        "name": "Normalized Difference Snow Index",
+        "formula": "((A.astype(float)-B)/(A.astype(float)+B))",
+        "Sentinel-2": {"A": 3, "B": 11},
+        "LANDSAT": {"A": 4, "B": 6},
+    },
+    "NDMI": {
+        "name": "Normalized Difference Moisture Index",
+        "formula": {"((A.astype(float)-B)/(A.astype(float)+B))"},
+        "Sentinel-2": {"A": 8, "B": 11},
+        "LANDSAT": {"A": 5, "B": 6},
+    },
 }
 
-class CreateIndices(object):
 
+class CreateIndices(object):
     def __init__(self, indir, outdir, index="NDVI"):
         """Create folder to store indices
 
@@ -51,7 +57,9 @@ class CreateIndices(object):
         self.indir = indir
         self.outdir = makedirs(outdir)
         if index not in INDICES.keys():
-            raise Exception(f"Index {index} not available in the list of supported indices")
+            raise Exception(
+                f"Index {index} not available in the list of supported indices"
+            )
         else:
             self.index = index
 
@@ -63,7 +71,7 @@ class CreateIndices(object):
                 files_to_process.append(file)
         indices_cmd_list = []
         index = INDICES[self.index]
-        formula = index['formula']
+        formula = index["formula"]
         for file in files_to_process:
             if "SEN2" in file:
                 bands = INDICES[self.index]["Sentinel-2"]
@@ -90,6 +98,4 @@ class CreateIndices(object):
             ]
             print(" ".join(index_calc))
             indices_cmd_list.append(index_calc)
-        run_subprocess_parallel(
-            cmd_list_list=indices_cmd_list, num_processes=n_procs
-        )
+        run_subprocess_parallel(cmd_list_list=indices_cmd_list, num_processes=n_procs)

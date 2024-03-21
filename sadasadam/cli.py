@@ -69,19 +69,13 @@ def main():
         east = config.get("east")
         west = config.get("west")
         if not north or not south or not east or not west:
-            raise Exception(
-                "Please provide a bounding box for your area of interest"
-            )
+            raise Exception("Please provide a bounding box for your area of interest")
         start = config.get("start")
         if not start:
-            raise Exception(
-                "Please provide a start date for the temporal extent"
-            )
+            raise Exception("Please provide a start date for the temporal extent")
         end = config.get("end")
         if not end:
-            raise Exception(
-                "Please provide an end date for the temporal extent"
-            )
+            raise Exception("Please provide an end date for the temporal extent")
         cloud_cover = config.get("cloud_cover")
         if not cloud_cover:
             raise Exception("Please provide a maximum cloud cover")
@@ -94,20 +88,14 @@ def main():
             download_dir = os.path.join(output_dir, "download")
             if not os.path.exists(download_dir):
                 os.mkdir(download_dir)
-            print(
-                "A download directory will be created "
-                "under the output directory"
-            )
+            print("A download directory will be created " "under the output directory")
         temp_force_dir = config.get("temp_force_dir")
         if not temp_force_dir:
             # create a temporary directory under the output directory
             temp_force_dir = os.path.join(output_dir, "temp")
             if not os.path.exists(temp_force_dir):
                 os.mkdir(temp_force_dir)
-            print(
-                "A temporary directory will be created "
-                "under the output directory"
-            )
+            print("A temporary directory will be created " "under the output directory")
         wvdb_dir = config.get("wvdb_dir")
         if not wvdb_dir:
             raise Exception("Please provide a path to the wvdb directory")
@@ -155,15 +143,13 @@ def main():
             cloud_buffer = config.get("cloud_buffer")
             if not cloud_buffer:
                 raise Exception(
-                    "Please provide a cloud buffer, "
-                    "or define a force_param_file"
+                    "Please provide a cloud buffer, " "or define a force_param_file"
                 )
 
         n_procs_postprocessing = config.get("n_procs_postprocessing")
         if not n_procs_postprocessing:
             raise Exception(
-                "Please provide the number of "
-                "processes to use for postprocessing"
+                "Please provide the number of " "processes to use for postprocessing"
             )
 
         save_qai = config.get("save_qai")
@@ -190,8 +176,7 @@ def main():
         check_bool(force_only)
         if force_only:
             print(
-                "Process will skip downloading "
-                "and only run FORCE and postprocessing"
+                "Process will skip downloading " "and only run FORCE and postprocessing"
             )
         indices_only = config.get("indices_only")
         check_bool(indices_only)
@@ -207,10 +192,7 @@ def main():
             indices_dir = os.path.join(output_dir, "indices")
             if not os.path.exists(indices_dir):
                 os.mkdir(indices_dir)
-            print(
-                "A indices directory will be created "
-                "under the output directory"
-            )
+            print("A indices directory will be created " "under the output directory")
         indices_list = config.get("indices_list")
         if force_only is True and download_only is True:
             raise Exception(
@@ -243,9 +225,7 @@ def main():
         if download_only is False and indices_only is False:
             print("Setting up FORCE processing...")
             # start FORCE process
-            force_proc = ForceProcess(
-                temp_dir=temp_force_dir, level1_dir=download_dir
-            )
+            force_proc = ForceProcess(temp_dir=temp_force_dir, level1_dir=download_dir)
             force_proc.setup_wvdb(target_dir=wvdb_dir)
             force_proc.create_force_queue_file()
             if use_param_file is False:
@@ -285,9 +265,7 @@ def main():
         if download_only is False and force_only is False:
             for index in indices_list:
                 indices_proc = CreateIndices(
-                    indir=output_dir,
-                    outdir=indices_dir,
-                    index=index
+                    indir=output_dir, outdir=indices_dir, index=index
                 )
                 indices_proc.calculate(n_procs=n_procs_postprocessing)
 

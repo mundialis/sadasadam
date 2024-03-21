@@ -63,9 +63,7 @@ def extract_and_delete_tar_gz_files(directory):
         if file.endswith((".SAFE.zip", ".tar.gz", ".SAFE")):
             file_path = os.path.join(directory, file)
             warning_text = (
-                "Warning: - "
-                f"Unable to extract: {file_path}. "
-                "Retrying Download..."
+                "Warning: - " f"Unable to extract: {file_path}. " "Retrying Download..."
             )
             landsat_extract_dir = None
             remove = True
