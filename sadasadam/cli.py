@@ -27,6 +27,7 @@ import yaml
 
 from sadasadam.force import ForceProcess
 from sadasadam.download import download_and_extract
+from sadasadam.indices import CreateIndices
 
 
 def check_bool(variable):
@@ -192,6 +193,25 @@ def main():
                 "Process will skip downloading "
                 "and only run FORCE and postprocessing"
             )
+        indices_only = config.get("indices_only")
+        check_bool(indices_only)
+        if indices_only:
+            print(
+                "Process will skip downloading, FORCE "
+                "and postprocessing and run only indices"
+            )
+
+        indices_dir = config.get("indices_dir")
+        if not indices_dir:
+            # create a indices directory under the output directory
+            indices_dir = os.path.join(output_dir, "indices")
+            if not os.path.exists(indices_dir):
+                os.mkdir(indices_dir)
+            print(
+                "A indices directory will be created "
+                "under the output directory"
+            )
+        indices_list = config.get("indices_list")
         if force_only is True and download_only is True:
             raise Exception(
                 "Parameters <force_only> and <download_only> "
@@ -200,7 +220,7 @@ def main():
 
         # Start Downloading
 
-        if force_only is False:
+        if force_only is False and indices_only is False:
             # define satellite products
             products = ["S2_MSI_L1C", "LANDSAT_C2L1"]
             # define geometry
@@ -220,7 +240,7 @@ def main():
                 download_dir=download_dir,
             )
         # Start FORCE
-        if download_only is False:
+        if download_only is False and indices_only is False:
             print("Setting up FORCE processing...")
             # start FORCE process
             force_proc = ForceProcess(
@@ -261,6 +281,15 @@ def main():
 
             if remove_force_data is True:
                 force_proc.cleanup()
+
+        if download_only is False and force_only is False:
+            for index in indices_list:
+                indices_proc = CreateIndices(
+                    indir=output_dir,
+                    outdir=indices_dir,
+                    index=index
+                )
+                indices_proc.calculate(n_procs=n_procs_postprocessing)
 
         if clear_download is True:
             for scene in os.listdir(download_dir):

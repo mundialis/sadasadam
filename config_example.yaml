@@ -59,8 +59,8 @@ target_proj_epsg: 25832
 
 # type=str, help='Path to FORCE parameter file, this file will be used to overwrite default
 # parameters of FORCE'. Set to 'None' if you don't want to use a force parameter file
-# force_param_file: 'None'
-force_param_file: '/path/to/force-parameter-file.cfg'
+force_param_file: 'None'
+# force_param_file: '/path/to/force-parameter-file.cfg'
 
 # type=int, help='Each input scene in FORCE uses one process, each process may use
 # multiple threads. In general, it is most efficient to use as much multi-
@@ -89,3 +89,12 @@ download_only: False
 # type=bool, help='If True, only the FORCE processing and postprocessing will be done. This requires that satellite
 # data is available in download_dir'
 force_only: False
+
+# type=bool, help='If True, only indices creation of data will be done'
+indices_only: False
+
+# type=list, help='The list of indices to be execute, you can get the list with the -i flag'
+indices_list: ["NDVI", "NDMI"]
+
+# type=str, help='Path to folder where indices is stored'
+indices_dir: '/path/to/indices/dir/'
