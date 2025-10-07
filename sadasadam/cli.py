@@ -327,6 +327,7 @@ def main():
                         "LO08",
                         "S2A",
                         "S2B",
+                        "S2C",
                         "queue",
                         ".downloaded",
                     )
