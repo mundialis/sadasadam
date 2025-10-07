@@ -141,7 +141,9 @@ class ForceProcess(object):
         files_to_process = [
             os.path.join(self.level1_dir, scene)
             for scene in os.listdir(self.level1_dir)
-            if scene.startswith(("LC09", "LC08", "LO09", "LO08", "S2A", "S2B", "S2C"))
+            if scene.startswith(
+                ("LC09", "LC08", "LO09", "LO08", "S2A", "S2B", "S2C")
+            )
         ]
         lines_per_string = [f"{path} QUEUED\n" for path in files_to_process]
         queue_file = os.path.join(self.level1_dir, "queue")
