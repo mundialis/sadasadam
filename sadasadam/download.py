@@ -50,7 +50,7 @@ def download_with_eodag(
         f"Found {num_results} matching scenes "
         f"of type {product_type}, starting download..."
     )
-    dag.download_all(search_results, outputs_prefix=download_dir)
+    dag.download_all(search_results, output_dir=download_dir, extract=False)
 
 
 def extract_and_delete_tar_gz_files(directory):
