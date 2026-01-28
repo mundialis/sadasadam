@@ -139,6 +139,9 @@ def main():
         cloud_cover = config.get("cloud_cover")
         if not cloud_cover:
             raise Exception("Please provide a maximum cloud cover")
+        products = config.get("products")
+        if not products:
+            raise Exception("Please provide at least one satellite product to download")
         output_dir = config.get("output_dir")
         if not output_dir:
             raise Exception("Please provide an output directory")
@@ -256,8 +259,6 @@ def main():
         # Start Downloading
 
         if force_only is False:
-            # define satellite products
-            products = ["S2_MSI_L1C", "LANDSAT_C2L1"]
             # define geometry
             geom = {
                 "lonmin": west,

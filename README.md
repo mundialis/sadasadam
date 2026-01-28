@@ -127,6 +127,7 @@ south: 45.67          # AOI boundary in decimal degree
 east: 11.97           # AOI boundary in decimal degree
 west: 10.44           # AOI boundary in decimal degree
 cloud_cover: 75       # maximum percentage of cloud cover in scene
+products: ['S2_MSI_L1C', 'LANDSAT_C2L1']   # satellite products to download
 ```
 
 ##### FORCE & postprocessing options

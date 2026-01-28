@@ -20,7 +20,7 @@
 #
 ############################################################################
 
-# Developed and tested for FORCE version 3.7.11
+# Developed and tested for FORCE version 3.7.11 - adapted to use with FORCE version 3.10.00
 import os
 import shutil
 from subprocess import Popen, PIPE
@@ -344,7 +344,7 @@ class ForceProcess(object):
         cmd_list = [
             "force-mosaic",
             "-m",
-            self.mosaic_dir_name,
+            self.mosaic_path,
             self.level2_dir,
         ]
         run_subprocess(cmd_list)

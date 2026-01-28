@@ -39,6 +39,20 @@ end: '2023-08-15'
 # type=int, help='Max. cloud cover (1-100) of scenes to download.'
 cloud_cover: 100
 
+# type=list, help='Satellite products to download and process. Note: the according credentials must be provided in the eodag.yaml for the specific products'
+# examples:
+#   products:
+#     - S2_MSI_L1C      Only Sentinel 2
+#
+#   products:
+#     - LANDSAT_C2L1    Only Landsat
+#
+#   products:
+#     - S2_MSI_L1C      Both Sentinel & Landsat
+#     - LANDSAT_C2L1
+products:
+  - S2_MSI_L1C
+
 # type=str, help='Path to folder where output is stored'
 output_dir: '/path/to/output/dir/'
 
