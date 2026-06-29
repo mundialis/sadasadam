@@ -34,15 +34,17 @@ def download_with_eodag(
     """Function to download satellite data using eodag library"""
     # initialize eodag
     dag = EODataAccessGateway()
+    # set preferred provider to CDSE
+    dag.set_preferred_provider("cop_dataspace")
     # search for products
     items_per_page = 20
     search_kwargs = {
         "items_per_page": items_per_page,
-        "productType": product_type,
+        "collection": product_type,
         "geom": geom,
         "start": start_date,
         "end": end_date,
-        "cloudCover": cloudcover,
+        "eo:cloud_cover": cloudcover,
     }
     search_results = dag.search_all(**search_kwargs)
     num_results = len(search_results)

@@ -21,6 +21,7 @@
 ############################################################################
 
 # Developed and tested for FORCE version 3.7.11
+from glob import glob
 import os
 import shutil
 from subprocess import Popen, PIPE
@@ -166,7 +167,7 @@ class ForceProcess(object):
             for line_raw in file:
                 line = line_raw.strip()
                 for key, value in replace_dict.items():
-                    if line.startswith(key):
+                    if line.startswith(key) or line.startswith(f"# {key}"):
                         line = line.replace(line, value)
                 updated_conf += f"{line}\n"
         # write content to new file
@@ -196,6 +197,7 @@ class ForceProcess(object):
             f"DIR_PROVENANCE = {self.provenance_dir}",
             f"DIR_TEMP = {self.temp_dir}",
             f"FILE_DEM = {dem_path}",
+            "USE_DEM_DATABASE = FALSE",
             f"PROJECTION = {wkt}",
             f"DIR_WVPLUT = {self.wvdb_dir}",
             "RESAMPLING = BL",
@@ -343,11 +345,20 @@ class ForceProcess(object):
         print("Creation of same day mosaics...")
         cmd_list = [
             "force-mosaic",
-            "-m",
-            self.mosaic_dir_name,
+            # There is currently a bug in the FORCE mosaic tool. The -m option
+            # is not working properly and the mosaic directory name is not
+            # used. The output vrt files are always created in the level2
+            # directory.
+            # "-m",
+            # self.mosaic_dir_name,
             self.level2_dir,
         ]
         run_subprocess(cmd_list)
+        # Fix the bug by creating symlinks to the vrt files in the mosaic
+        # directory
+        for vrt_file in glob(os.path.join(self.level2_dir, "*.vrt")):
+            link = os.path.join(self.mosaic_path, os.path.basename(vrt_file))
+            os.symlink(vrt_file, link)
         print("Creation of same day mosaics finished")
         pass
 
@@ -483,20 +494,26 @@ class ForceProcess(object):
                         ],
                     )
                     ds_gdal = None
+            else:
+                warnings.warn(
+                    f"No valid pixels in <{clearsky_file}>. Either because it "
+                    "is outside the AOI or it is fully cloudy. Skipping..."
+                )
 
-        run_subprocess_parallel(
-            cmd_list_list=cloudfree_parallel_list, num_processes=n_procs
-        )
-        # finally: update the band descriptions from the original files
-        for boa_in, boa_out in boa_input_output.items():
-            update_band_description_from_reference(
-                target_raster=boa_out, reference_raster=boa_in
+        if len(cloudfree_parallel_list) > 0:
+            run_subprocess_parallel(
+                cmd_list_list=cloudfree_parallel_list, num_processes=n_procs
             )
+            # finally: update the band descriptions from the original files
+            for boa_in, boa_out in boa_input_output.items():
+                update_band_description_from_reference(
+                    target_raster=boa_out, reference_raster=boa_in
+                )
 
-        print(
-            "Postprocessing of clear sky same day mosaics finished. "
-            f"Results are saved to {target_dir}"
-        )
+            print(
+                "Postprocessing of clear sky same day mosaics finished. "
+                f"Results are saved to {target_dir}"
+            )
 
     def cleanup(self):
         """Deletes all files created during the FORCE processing
