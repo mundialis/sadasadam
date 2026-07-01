@@ -203,7 +203,7 @@ depending on data filtering and parallelization options defined in the config fi
 #### Using SADASADAM with docker
 
 This repository contains a Dockerfile to build a docker image with SADASADAM and all dependencies installed. The dockerfile use the a [FORCE docker](https://hub.docker.com/r/davidfrantz/force) image as base image and adds SADASADAM and its dependencies on top of it. 
-Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE and USGS. The eodag config file will be created automatically when building the docker image. 
+Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE and USGS. The eodag config file will be created automatically when the container starts.
 
 1. Build the docker image with the following command:
 

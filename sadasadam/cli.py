@@ -324,6 +324,8 @@ def main():
             # water vapor database setup is only needed for Landsat data
             if "LANDSAT_C2L1" in products:
                 force_proc.setup_wvdb(target_dir=wvdb_dir)
+            else:
+                force_proc.wvdb_dir = "NULL"
             force_proc.create_force_queue_file()
             if use_param_file is False:
                 force_proc.create_force_level2_config_file(

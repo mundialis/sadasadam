@@ -1,12 +1,14 @@
 #!/bin/sh
+
 ########################################################################
 #
-# MODULE:       setup_eodag.sh
+# MODULE:       start.sh
 #
 # AUTHOR(S):    Jonas Pischke
 #
 # PURPOSE:      This script creates the eodag config file (eodag.yml)
-#               and inserts CDSE credentials from .env.
+#               from environment variables and then starts the container
+#               command.
 #
 # SPDX-FileCopyrightText: (c) 2026 by mundialis GmbH & Co. KG
 #
@@ -40,23 +42,31 @@ cat <<EOF > ~/.config/eodag/eodag.yml
 # See the License for the specific language governing permissions and
 # limitations under the License.
 cop_dataspace:
-    priority: 3
-    search: # Search parameters configuration
-    download:
-        extract: False
-        output_dir:
-    auth:
-        credentials:
-            username: ${CDSE_USER}
-            password: "${CDSE_PW}"
+  priority: 3
+  search: # Search parameters configuration
+  download:
+    extract: False
+    output_dir:
+  auth:
+    credentials:
+      username: ${CDSE_USER}
+      password: "${CDSE_PW}"
 usgs:
-    priority: 2 # Lower value means lower priority (Default: 0)
-    api:
-        extract: False
-        output_dir:
-        dl_url_params:
-        product_location_scheme:
-        credentials:
-            username: ${USGS_USER}
-            password: "${USGS_PW}"
+  priority: 2 # Lower value means lower priority (Default: 0)
+  api:
+    extract: False
+    output_dir:
+    dl_url_params:
+    product_location_scheme:
+    credentials:
+      username: ${USGS_USER}
+      password: "${USGS_PW}"
 EOF
+
+if [ "$#" -eq 0 ]; then
+	set -- tail -f /dev/null
+elif [ "${1#-}" != "$1" ]; then
+	set -- sadasadam "$@"
+fi
+
+exec "$@"
