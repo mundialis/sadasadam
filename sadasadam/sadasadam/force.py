@@ -3,7 +3,7 @@
 ############################################################################
 #
 # MODULE:      force.py
-# AUTHOR(S):   Momen Mawad, Guido Riembauer
+# AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Handles FORCE processing and postprocessing of satellite data
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG

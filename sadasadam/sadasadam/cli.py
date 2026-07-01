@@ -3,7 +3,7 @@
 ############################################################################
 #
 # MODULE:      cli.py
-# AUTHOR(S):   Momen Mawad, Guido Riembauer
+# AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Command line interface of sadasadam
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
@@ -39,8 +39,6 @@ def check_filter(start, end, north, south, east, west):
     south_f = float(south)
     east_f = float(east)
     west_f = float(west)
-    start_date = datetime.strptime(start, "%Y-%m-%d")
-    end_date = datetime.strptime(end, "%Y-%m-%d")
     if north_f < -90 or north_f > 90:
         raise Exception(
             f"The value for north {north} is outside the valid"
@@ -71,9 +69,13 @@ def check_filter(start, end, north, south, east, west):
         raise Exception(
             f"The value for west {west} is larger than for east {east}."
         )
-
-    if start_date > end_date:
-        raise Exception(f"Start date {start} is later than end date {end}.")
+    if start and end:
+        start_date = datetime.strptime(start, "%Y-%m-%d")
+        end_date = datetime.strptime(end, "%Y-%m-%d")
+        if start_date > end_date:
+            raise Exception(
+                f"Start date {start} is later than end date {end}."
+            )
 
 
 def check_bool(variable):
@@ -110,6 +112,17 @@ def main():
             config = yaml.load(config_file, Loader=yaml.FullLoader)
 
         # Access the arguments from the configuration file
+        s2_scene_ids = config.get("s2_scene_ids")
+        s2_scene_ids_file = config.get("s2_scene_ids_file")
+        # check if file exists if provided
+        if s2_scene_ids_file and not os.path.isfile(s2_scene_ids_file):
+            raise Exception(
+                f"Sentinel-2 Scene IDs file {s2_scene_ids_file} not found"
+            )
+        if s2_scene_ids_file and not s2_scene_ids:
+            with open(s2_scene_ids_file, "r") as f:
+                s2_scene_ids = [line.strip() for line in f if line.strip()]
+
         north = config.get("north")
         south = config.get("south")
         east = config.get("east")
@@ -119,14 +132,16 @@ def main():
                 "Please provide a bounding box for your area of interest"
             )
         start = config.get("start")
-        if not start:
+        if not start and not s2_scene_ids:
             raise Exception(
-                "Please provide a start date for the temporal extent"
+                "Please provide a start date for the temporal extent or a list"
+                " of Sentinel-2 scene IDs or a file containing them"
             )
         end = config.get("end")
-        if not end:
+        if not end and not s2_scene_ids:
             raise Exception(
-                "Please provide an end date for the temporal extent"
+                "Please provide an end date for the temporal extent or a list "
+                "of Sentinel-2 scene IDs or a file containing them"
             )
         check_filter(
             start=start,
@@ -137,8 +152,29 @@ def main():
             west=west,
         )
         cloud_cover = config.get("cloud_cover")
-        if not cloud_cover:
+        if cloud_cover is None and not s2_scene_ids:
             raise Exception("Please provide a maximum cloud cover")
+        tile_id = config.get("tile_id")
+
+        products = config.get("products")
+        if not products or not all(
+            product in ["S2_MSI_L1C", "LANDSAT_C2L1"] for product in products
+        ):
+            raise Exception(
+                "Please define the satellite products to download and process "
+                "(S2_MSI_L1C and/or LANDSAT_C2L1). "
+            )
+        if (
+            products[0] == "LANDSAT_C2L1"
+            and len(products) == 1
+            and not s2_scene_ids
+        ):
+            raise Exception(
+                "Download via Sentinel-2 Scene IDs is only possible with "
+                "Sentinel-2 product <S2_MSI_L1C>. Please add <S2_MSI_L1C> to "
+                "the products list or remove the Sentinel-2 Scene IDs in the "
+                "config file."
+            )
         output_dir = config.get("output_dir")
         if not output_dir:
             raise Exception("Please provide an output directory")
@@ -256,8 +292,7 @@ def main():
         # Start Downloading
 
         if force_only is False:
-            # define satellite products
-            products = ["S2_MSI_L1C", "LANDSAT_C2L1"]
+            print("Starting filtering of satellite data...")
             # define geometry
             geom = {
                 "lonmin": west,
@@ -265,15 +300,20 @@ def main():
                 "lonmax": east,
                 "latmax": north,
             }
+
+            download_params = {
+                "products": products,
+                "geom": geom,
+                "start_date": start,
+                "end_date": end,
+                "cloudcover": cloud_cover,
+                "download_dir": download_dir,
+                "s2_scene_ids": s2_scene_ids,
+                "tile_id": tile_id,
+            }
             # start the download process
-            download_and_extract(
-                products=products,
-                geom=geom,
-                start_date=start,
-                end_date=end,
-                cloudcover=cloud_cover,
-                download_dir=download_dir,
-            )
+            download_and_extract(**download_params)
+
         # Start FORCE
         if download_only is False:
             print("Setting up FORCE processing...")

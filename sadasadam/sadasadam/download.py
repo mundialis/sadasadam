@@ -3,7 +3,7 @@
 ############################################################################
 #
 # MODULE:      download.py
-# AUTHOR(S):   Momen Mawad, Guido Riembauer
+# AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Handles download of satellite data using eodag
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
@@ -26,32 +26,76 @@ import shutil
 import zipfile
 
 from eodag import EODataAccessGateway
+from eodag import SearchResult
 
 
 def download_with_eodag(
-    product_type, geom, start_date, end_date, download_dir, cloudcover=100
+    product_type,
+    geom,
+    start_date,
+    end_date,
+    download_dir,
+    cloudcover=100,
+    s2_scene_ids=None,
+    tile_id=None,
 ):
     """Function to download satellite data using eodag library"""
     # initialize eodag
     dag = EODataAccessGateway()
-    # set preferred provider to CDSE
-    dag.set_preferred_provider("cop_dataspace")
+    # set preferred provider according to the product type
+    provider_dict = {"S2_MSI_L1C": "cop_dataspace", "LANDSAT_C2L1": "usgs"}
+    provider = provider_dict.get(product_type, None)
     # search for products
     items_per_page = 20
-    search_kwargs = {
-        "items_per_page": items_per_page,
-        "collection": product_type,
-        "geom": geom,
-        "start": start_date,
-        "end": end_date,
-        "eo:cloud_cover": cloudcover,
-    }
-    search_results = dag.search_all(**search_kwargs)
+    if not s2_scene_ids:
+        search_kwargs = {
+            "items_per_page": items_per_page,
+            "collection": product_type,
+            "geom": geom,
+            "start": start_date,
+            "end": end_date,
+            "eo:cloud_cover": cloudcover,
+            "provider": provider,
+        }
+        print(
+            f"Searching for {product_type} products with the following "
+            "parameters:"
+        )
+        print(f"- Start date: {start_date}")
+        print(f"- End date: {end_date}")
+        print(f"- Cloud cover: {cloudcover}")
+        if tile_id and product_type == "S2_MSI_L1C":
+            search_kwargs["grid:code"] = f"MGRS-{tile_id}"
+            print(f"- Tile ID: {tile_id}")
+        search_results = dag.search_all(**search_kwargs)
+    elif s2_scene_ids and product_type == "S2_MSI_L1C":
+        search_kwargs = {
+            "items_per_page": items_per_page,
+            "collection": product_type,
+            "provider": provider,
+        }
+        search_results_lst = []
+        print(
+            f"Searching for {product_type} products with the following "
+            "Sentinel-2 Scene IDs:"
+        )
+        for scene_id in s2_scene_ids:
+            print(f"- {scene_id}")
+            search_kwargs["id"] = scene_id
+            search_results_lst.extend(dag.search(**search_kwargs))
+            search_results = SearchResult(search_results_lst)
     num_results = len(search_results)
-    print(
-        f"Found {num_results} matching scenes "
-        f"of type {product_type}, starting download..."
-    )
+    if num_results > 0:
+        print(
+            f"Found {num_results} matching scenes "
+            f"of type {product_type}, starting download..."
+        )
+    else:
+        print(
+            f"No matching scenes found for {product_type} "
+            f"with the given parameters. Please check your search criteria."
+        )
+        return
     dag.download_all(search_results, output_dir=download_dir, extract=False)
 
 
@@ -126,10 +170,12 @@ def extract_and_delete_tar_gz_files(directory):
 def download_and_extract(
     products,
     geom,
-    start_date,
-    end_date,
     download_dir,
+    start_date=None,
+    end_date=None,
     cloudcover=100,
+    s2_scene_ids=None,
+    tile_id=None,
     max_tries=3,
 ):
     """
@@ -147,6 +193,8 @@ def download_and_extract(
                 end_date=end_date,
                 cloudcover=cloudcover,
                 download_dir=download_dir,
+                s2_scene_ids=s2_scene_ids,
+                tile_id=tile_id,
             )
         corrupt_files = extract_and_delete_tar_gz_files(download_dir)
         if len(corrupt_files) == 0:
