@@ -33,18 +33,17 @@ software [FORCE](https://force-eo.readthedocs.io/en/latest/index.html) for atmos
 
 needs to be installed on the system. FORCE in turn has many dependencies and takes some steps to install. See the detailed
 installation instructions from the [FORCE documentation](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
-SADASADAM was developed and tested using FORCE v.3.7.11.
+SADASADAM was developed and tested using FORCE v.3.10.04.
 
 ### [GDAL](https://gdal.org)
 
 and its Python bindings need to be installed, but they should be a requirement for FORCE anyway. SADASADAM was developed
-and tested using GDAL v.3.4.1. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
+and tested using GDAL v.3.8.4. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
 GDAL is often available in most systems but needs to be installed if not already present.
 
 ### Python libraries
 
-SADASADAM requires the Python libraries `pyyaml`, `eodag`, `gdal`, `gdal-utils`, and `requests` which should be installed automatically
-when installing SADASADAM (see next section)
+SADASADAM requires the Python libraries `pyyaml`, `eodag`, `gdal`, `gdal-utils`, and `requests` which should be installed automatically when installing SADASADAM (see next section). SADASADAM was developed and tested using `eodag` v.4.4.0
 
 # Installation
 
@@ -65,14 +64,9 @@ Note that `pip install .` command does install the packages locally from the cur
 
 The steps above will automatically install the Python library [eodag](https://eodag.readthedocs.io/en/stable/index.html) as well.
 Before running SADASADAM, eodag needs to be configured (see [eodag documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html)).
-The eodag config file needs to be filled with credentials for satellite data providers. SADASADAM calls eodag to download only Sentinel-2
-and Landsat-8/9 Level 1C data. Therefore, providing credentials to the `cop_dataspace` and `usgs` sections of the eodag config file
-is recommended. It is recommended to define `extract: False` in the eodag config file as SADASADAM automatically extracts the downloaded data according to the input requirements of FORCE.
+The eodag config file needs to be filled with credentials for satellite data providers. SADASADAM calls eodag to download only Sentinel-2 and Landsat-8/9 Level 1C data. Therefore, providing credentials to the `cop_dataspace` and `usgs` sections of the eodag config file is recommended. It is recommended to define `extract: False` in the eodag config file as SADASADAM automatically extracts the downloaded data according to the input requirements of FORCE.
 
-A priority of providers can be defined in the eodag config file. We noticed the unexpected behaviour that download of Sentinel-2
-from `cop_dataspace` fails (error related to `peps` provider credentials), if both `cop_dataspace` and `usgs` have the same priority.
-A functioning workaround seems to be to **set the priority of `cop_dataspace` to 2, and that of `usgs` to 1** - this way both Sentinel-2 and
-Landsat download worked in our tests.
+SADASADAM will only use `cop_dataspace` and `usgs` as providers for Sentinel-2 and Landsat-8/9 data, respectively. Therefore, priorities settings in the eodag config file can be ignored.
 
 # Usage
 
@@ -82,9 +76,17 @@ SADASADAM can be executed with one single command, but internally, the script ca
 
 ##### Download of satellite data
 
-SADASADAM will try to download all Sentinel-2 and Landsat-8/9 Level 1C scenes that match the filter options passed in the SADASADAM config file.
+SADASADAM will try to download all Sentinel-2 and/or Landsat-8/9 Level 1C scenes that match the filter options passed in the SADASADAM config file.
 It makes use of user credentials and download paths defined in the eodag config file (see section above). The download path however can also be overwritten by
 the `download_dir` parameter of the SADASADAM config file. All data are extracted, corrupt archives are removed and tried to download again.
+
+Availabe filter options are:
+- start and end date for the temporal filter of satellite data download in format YYYY-MM-DD
+- north, south, east, west for the AOI boundary in decimal degree
+- cloud_cover for the maximum percentage of cloud cover in scene
+- Sentinel-2 grid tile ID if only scenes for a specific tile should be downloaded, e.g. 32UMB (for Sentinel-2 product only)
+
+Additonally, for Sentinel-2 scenes the user can provide a list of specific Sentinel-2 scene IDs for downloading specific scenes. If this list is not empty, the other parameters (start, end, cloud_cover, tile_id) will be ignored.
 
 ##### FORCE processing
 
@@ -127,6 +129,7 @@ south: 45.67          # AOI boundary in decimal degree
 east: 11.97           # AOI boundary in decimal degree
 west: 10.44           # AOI boundary in decimal degree
 cloud_cover: 75       # maximum percentage of cloud cover in scene
+tile_id: '32UMB'      # Sentinel-2 tiling grid ID
 ```
 
 ##### FORCE & postprocessing options

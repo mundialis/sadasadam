@@ -1,7 +1,7 @@
 ############################################################################
 #
 # MODULE:      sadasadam config_example.yaml
-# AUTHOR(S):   Momen Mawad, Guido Riembauer
+# AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Config file for sadasadam
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
@@ -38,6 +38,31 @@ end: '2023-08-15'
 
 # type=int, help='Max. cloud cover (1-100) of scenes to download.'
 cloud_cover: 100
+
+# type=str, help='Sentinel-2 tiling grid ID (e.g., 32UMB) if only scenes for a specific tile shall be downloaded, otherwise leave empty. Only for Sentinel-2 products. Only one tile id is allowed. Make sure AOI covers the tile extent. If not, no data will be found to download and process.'
+tile_id: # 32UMB
+
+# type=list, help='Sentinel-2 scene IDs for downloading specific scenes. If this list is not empty, the other filter parameters (start, end, cloud_cover) will be ignored. Make sure AOI covers the scenes.'
+s2_scene_ids:
+#  - 'S2A_MSIL1C_20260627T104041_N0512_R008_T32UMB_20260627T155506'
+#  - 'S2B_MSIL1C_20260627T102559_N0512_R108_T32ULB_20260627T140422'
+
+# type=str, help='Path to a txt file with Sentinel-2 Scene IDs for downloading specific scenes. If this list is not empty, the other filter parameters (start, end, cloud_cover) and the s2_scene_ids parameter will be ignored. Make sure AOI covers the extent of the scenes.'
+s2_scene_ids_file: # '/path/to/s2_scene_ids.txt'
+
+# type=list, help='Satellite products to download and process. Note: the according credentials must be provided in the eodag.yaml for the specific products'
+# examples:
+#   products:
+#     - S2_MSI_L1C      Only Sentinel 2
+#
+#   products:
+#     - LANDSAT_C2L1    Only Landsat
+#
+#   products:
+#     - S2_MSI_L1C      Both Sentinel & Landsat
+#     - LANDSAT_C2L1
+products:
+  - S2_MSI_L1C
 
 # type=str, help='Path to folder where output is stored'
 output_dir: '/path/to/output/dir/'
