@@ -182,22 +182,22 @@ def main():
         if not download_dir:
             # create a download directory under the output directory
             download_dir = os.path.join(output_dir, "download")
-            if not os.path.exists(download_dir):
-                os.mkdir(download_dir)
-            print(
-                "A download directory will be created "
-                "under the output directory"
-            )
+        if not os.path.exists(download_dir):
+            os.makedirs(download_dir)
+        print(
+            "A download directory will be created "
+            "under the output directory"
+        )
         temp_force_dir = config.get("temp_force_dir")
         if not temp_force_dir:
             # create a temporary directory under the output directory
             temp_force_dir = os.path.join(output_dir, "temp")
-            if not os.path.exists(temp_force_dir):
-                os.mkdir(temp_force_dir)
-            print(
-                "A temporary directory will be created "
-                "under the output directory"
-            )
+        if not os.path.exists(temp_force_dir):
+            os.makedirs(temp_force_dir)
+        print(
+            "A temporary directory will be created "
+            "under the output directory"
+        )
         wvdb_dir = config.get("wvdb_dir")
         if not wvdb_dir:
             raise Exception("Please provide a path to the wvdb directory")
@@ -321,7 +321,9 @@ def main():
             force_proc = ForceProcess(
                 temp_dir=temp_force_dir, level1_dir=download_dir
             )
-            force_proc.setup_wvdb(target_dir=wvdb_dir)
+            # water vapor database setup is only needed for Landsat data
+            if "LANDSAT_C2L1" in products:
+                force_proc.setup_wvdb(target_dir=wvdb_dir)
             force_proc.create_force_queue_file()
             if use_param_file is False:
                 force_proc.create_force_level2_config_file(

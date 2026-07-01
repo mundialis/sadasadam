@@ -1,0 +1,11 @@
+services:
+  sadasadam:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        CDSE_USER: ${CDSE_USER}
+        CDSE_PW: ${CDSE_PW}
+        USGS_USER: ${USGS_USER}
+        USGS_PW: ${USGS_PW}
+    entrypoint: ["sadasadam"]

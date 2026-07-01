@@ -23,6 +23,7 @@
 
 import os
 import shutil
+import sys
 import zipfile
 
 from eodag import EODataAccessGateway
@@ -95,7 +96,8 @@ def download_with_eodag(
             f"No matching scenes found for {product_type} "
             f"with the given parameters. Please check your search criteria."
         )
-        return
+        # stope program if no matching scenes are found
+        sys.exit("Stopping SADASADAM.")
     dag.download_all(search_results, output_dir=download_dir, extract=False)
 
 
