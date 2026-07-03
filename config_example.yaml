@@ -71,9 +71,9 @@ output_dir: '/path/to/output/dir/'
 download_dir: '/path/to/download/dir/'
 
 # type=str, help='Path to folder where FORCE processing is done'
+# type=str, help='Path to folder where the Water Vapor Database is stored permanently (also for several runs). It can be an empty folder for sadasadam will fetch the data online.'
 temp_force_dir: '/path/to/temp_force/dir/'
 
-# type=str, help='Path to folder where the Water Vapor Database is stored permanently (also for several runs). It can be an empty folder for sadasadam will fetch the data online.'
 wvdb_dir: '/path/to/wvdb/dir/'
 
 # type=str, help='Path to DEM file used for FORCE'
