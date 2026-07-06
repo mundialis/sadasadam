@@ -4,19 +4,12 @@
 # AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Config file for sadasadam
-# COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-FileCopyrightText: (c) 2026 by mundialis GmbH & Co. KG
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-#############################################################################
+############################################################################
 
 # type=float, help='Northern boundary of AOI in decimal degrees'
 north: 46.6

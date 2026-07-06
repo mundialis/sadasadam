@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-#
+# ruff: noqa: TRY003, PTH123, PTH118, PTH110, PTH103, PTH112, PTH107
+# ruff: noqa: PTH208, PTH207, PTH119, PTH211 PLR0917, PLR0913, PLR0912, PLR0915
+# ruff: noqa: PLR0914, S603, S404, S202
 ############################################################################
 #
 # MODULE:      force.py
@@ -8,60 +10,61 @@
 # PURPOSE:     Handles FORCE processing and postprocessing of satellite data
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-FileCopyrightText: (c) 2026 by mundialis GmbH & Co. KG
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 ############################################################################
 
-# Developed and tested for FORCE version 3.7.11
-from glob import glob
+"""Module to handle FORCE processing and postprocessing of satellite data."""
+
+from __future__ import annotations
+
 import os
 import shutil
-from subprocess import Popen, PIPE
 import tarfile
 import warnings
-
-from datetime import datetime
+from datetime import datetime, timezone
+from glob import glob
+from http import HTTPStatus
 from multiprocessing import Pool
+from pathlib import Path
+from subprocess import PIPE, Popen
+
 import requests
-from osgeo import osr, gdal
+from osgeo import gdal, osr
 
 
-def makedirs(directory):
-    """Helper function to create a directory"""
+def makedirs(directory: str) -> str:
+    """Create a directory if it does not exist."""
     if not os.path.exists(directory):
         try:
             os.makedirs(directory)
-        except Exception as exception:
-            raise Exception(
+        except OSError as exception:
+            raise OSError(
                 "Error during the creation "
-                f"of the FORCE directory {directory}: {exception}"
-            )
+                f"of the FORCE directory {directory}: {exception}",
+            ) from exception
     else:
-        warnings.warn(f"Directory {directory} already exists, skipping...")
+        warnings.warn(
+            f"Directory {directory} already exists, skipping...",
+            stacklevel=2,
+        )
     return directory
 
 
-def get_wkt_from_epsg(epsg):
-    """Helper function to get WKT from an EPSG code"""
+def get_wkt_from_epsg(epsg: int) -> str:
+    """Get the WKT string from an EPSG code."""
     proj = osr.SpatialReference()
     proj.ImportFromEPSG(epsg)
-    wkt = proj.ExportToWkt()
-    return wkt
+    return proj.ExportToWkt()
 
 
-def update_band_description_from_reference(target_raster, reference_raster):
-    """Helper function that adds raster band descriptions from
-    a reference raster file.
-    Both rasters have to have the same number of bands
-    """
+def update_band_description_from_reference(
+    target_raster: str,
+    reference_raster: str,
+) -> None:
+    """Update raster band descriptions from a reference file."""
     ds_ref = gdal.Open(reference_raster)
     num_bands = ds_ref.RasterCount
     bands_descs = {}
@@ -77,41 +80,43 @@ def update_band_description_from_reference(target_raster, reference_raster):
     del ds_target
 
 
-def run_subprocess(cmd_list, pipe=True):
-    """Helper function that runs a subprocess
-    and tries to catch potential errors
-    """
+def run_subprocess(cmd_list: list[str], *, pipe: bool = True) -> None:
+    """Run a subprocess and try to catch potential errors."""
     cmd_str = " ".join(cmd_list)
     if pipe is True:
-        process = Popen(cmd_list, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = process.communicate()
+        with Popen(cmd_list, stdout=PIPE, stderr=PIPE) as process:
+            _stdout, stderr = process.communicate()
         # stdout_dec = stdout.decode()
         stderr_dec = stderr.decode()
         if "error" in stderr_dec.lower():
-            raise Exception(f"Error running process {cmd_str}:\n {stderr_dec}")
+            raise RuntimeError(
+                f"Error running process {cmd_str}:\n {stderr_dec}",
+            )
     else:
-        process = Popen(cmd_list)
-        process.wait()
+        with Popen(cmd_list) as process:
+            process.wait()
 
 
-def run_subprocess_parallel(cmd_list_list, num_processes):
-    """Helper function that runs run_subprocess in parallel"""
-    pool = Pool(processes=num_processes)
-    pool.map(run_subprocess, cmd_list_list)
+def run_subprocess_parallel(cmd_list_list: list, num_processes: int) -> None:
+    """Run subprocesses in parallel."""
+    with Pool(processes=num_processes) as pool:
+        pool.map(run_subprocess, cmd_list_list)
 
 
-class ForceProcess(object):
-    """Stores Methods to set up and run the FORCE Level-2 processor,
-    mosaic creation, and postprocessing"""
+class ForceProcess:
+    """Class to manage the FORCE processing workflow."""
 
-    def __init__(self, temp_dir, level1_dir=None, wvdb_dir=None):
-        """Creates the default FORCE folder structure in the
-        user-defined temp directory
-        """
-        now_time = datetime.now()
+    def __init__(
+        self,
+        temp_dir: str,
+        level1_dir: str | None = None,
+        wvdb_dir: str | None = None,
+    ) -> None:
+        """Create the default FORCE folder structure in the temp directory."""
+        now_time = datetime.now(tz=timezone.utc)
         now_time_str = now_time.strftime("%Y%m%d_%H%M%S")
         self.force_dir = makedirs(
-            os.path.join(temp_dir, f"force_dir_{now_time_str}")
+            os.path.join(temp_dir, f"force_dir_{now_time_str}"),
         )
         if not level1_dir:
             self.level1_dir = makedirs(os.path.join(self.force_dir, "level1"))
@@ -122,7 +127,7 @@ class ForceProcess(object):
         self.misc_dir = makedirs(os.path.join(self.force_dir, "misc"))
         self.param_dir = makedirs(os.path.join(self.force_dir, "param"))
         self.provenance_dir = makedirs(
-            os.path.join(self.force_dir, "provenance")
+            os.path.join(self.force_dir, "provenance"),
         )
         self.temp_dir = makedirs(os.path.join(self.force_dir, "temp_dir"))
         self.wvdb_dir = wvdb_dir
@@ -132,58 +137,58 @@ class ForceProcess(object):
         # input so both attributes are stored
         self.mosaic_dir_name = "mosaic"
         self.mosaic_path = makedirs(
-            os.path.join(self.level2_dir, self.mosaic_dir_name)
+            os.path.join(self.level2_dir, self.mosaic_dir_name),
         )
 
-    def create_force_queue_file(self):
-        """Creates a queue file needed for L2 processing for
-        all files of the level1 dir
-        """
+    def create_force_queue_file(self) -> None:
+        """Create a queue file needed for L2 processing."""
         files_to_process = [
             os.path.join(self.level1_dir, scene)
             for scene in os.listdir(self.level1_dir)
             if scene.startswith(
-                ("LC09", "LC08", "LO09", "LO08", "S2A", "S2B", "S2C")
+                ("LC09", "LC08", "LO09", "LO08", "S2A", "S2B", "S2C"),
             )
         ]
         lines_per_string = [f"{path} QUEUED\n" for path in files_to_process]
         queue_file = os.path.join(self.level1_dir, "queue")
-        with open(queue_file, "w") as file:
+        with open(queue_file, "w", encoding="utf-8") as file:
             file.writelines(lines_per_string)
         self.queue_file = queue_file
 
     def __replace_in_config_file(
-        self, old_config_file, new_config_file, replace_lines
-    ):
-        """Replaces lines in a FORCE config file"""
+        self,
+        old_config_file: str,
+        new_config_file: str,
+        replace_lines: list[str],
+    ) -> None:
+        """Replace lines in a FORCE config file."""
         replace_lines_keys = [item.split("= ")[0] for item in replace_lines]
         # create dict
         replace_dict = dict(
-            map(lambda i, j: (i, j), replace_lines_keys, replace_lines)
+            map(lambda i, j: (i, j), replace_lines_keys, replace_lines),
         )
         # open file and replace lines
         updated_conf = ""
-        with open(old_config_file, "r") as file:
+        with open(old_config_file, encoding="utf-8") as file:
             for line_raw in file:
                 line = line_raw.strip()
                 for key, value in replace_dict.items():
-                    if line.startswith(key) or line.startswith(f"# {key}"):
+                    if line.startswith((key, f"# {key}")):
                         line = line.replace(line, value)
                 updated_conf += f"{line}\n"
         # write content to new file
-        with open(new_config_file, "w") as file:
-            file.write(updated_conf)
+        Path(new_config_file).write_text(updated_conf, encoding="utf-8")
         self.config_file = new_config_file
 
     def create_force_level2_config_file(
         self,
-        dem_path="NULL",
-        target_proj_epsg=25832,
-        n_procs=1,
-        n_threads=2,
-        cloud_buffer=300,
-    ):
-        """Creates a config file needed for L2 processing"""
+        dem_path: str = "NULL",
+        target_proj_epsg: int = 25832,
+        n_procs: int = 1,
+        n_threads: int = 2,
+        cloud_buffer: int = 300,
+    ) -> None:
+        """Create a config file needed for L2 processing."""
         config_file_dummy = os.path.join(self.param_dir, "l2ps_dummy.prm")
         config_file = os.path.join(self.param_dir, "l2ps.prm")
         # create a dummy config_file and adapt it
@@ -210,9 +215,9 @@ class ForceProcess(object):
             # this means that no FORCE tile is taken out of the calculation,
             # even if it has 100% cloud cover:
             "MAX_CLOUD_COVER_TILE = 100",
-            f"CLOUD_BUFFER  = {str(cloud_buffer)}",
-            f"NPROC = {str(n_procs)}",
-            f"NTHREAD = {str(n_threads)}",
+            f"CLOUD_BUFFER  = {cloud_buffer}",
+            f"NPROC = {n_procs}",
+            f"NTHREAD = {n_threads}",
         ]
         self.__replace_in_config_file(
             old_config_file=config_file_dummy,
@@ -221,9 +226,12 @@ class ForceProcess(object):
         )
 
     def update_force_level2_config_file(
-        self, user_file, target_proj_epsg=None
-    ):
-        """Updates a config file needed for L2 processing.
+        self,
+        user_file: str,
+        target_proj_epsg: int | None = None,
+    ) -> None:
+        """Update a config file needed for L2 processing.
+
         It only updates the config file with the
         FORCE internal directories, the wkt for the projection string,
         and the water vapor db path.
@@ -246,42 +254,34 @@ class ForceProcess(object):
             replace_lines=replace_lines,
         )
 
-    def download_wvdb(self, target_dir):
-        """Downloads the Water Vapor Database 2000-2020 for
-        Landsat atmospheric correction.
-        """
+    def download_wvdb(self, target_dir: str) -> None:
+        """Download the Water Vapor Database for Landsat preprocessing."""
         url = (
             "https://zenodo.org/records/4468701/"
             "files/wvp-global.tar.gz?download=1"
         )
-        response = requests.get(url)
-        if response.status_code != 200:
-            raise Exception(
+        response = requests.get(url, timeout=60)
+        if response.status_code != HTTPStatus.OK:
+            raise requests.exceptions.HTTPError(
                 f"Download from url {url} was not successful: "
-                f"Status code {response.status_code}"
+                f"Status code {response.status_code}",
+                response=response,
             )
-        else:
-            target_dir = makedirs(target_dir)
-            target_file_path = os.path.join(target_dir, "wvp-global.tar.gz")
-            with open(target_file_path, mode="wb") as file:
-                file.write(response.content)
-            print("Extracting Water Vapor Database...")
-            with tarfile.open(target_file_path) as tfile:
-                tfile.extractall(target_dir)
-            os.remove(target_file_path)
-            self.wvdb_dir = target_dir
-            print(
-                "Water Vapor Database downloaded and "
-                f"extracted to {target_dir}"
-            )
+        target_dir = makedirs(target_dir)
+        target_file_path = Path(target_dir) / "wvp-global.tar.gz"
+        target_file_path.write_bytes(response.content)
+        print("Extracting Water Vapor Database...")
+        with tarfile.open(target_file_path) as tfile:
+            tfile.extractall(target_dir)
+        os.remove(target_file_path)
+        self.wvdb_dir = target_dir
+        print(
+            "Water Vapor Database downloaded and "
+            f"extracted to {target_dir}",
+        )
 
-    def setup_wvdb(self, target_dir):
-        """Downloads the Water Vapor Database 2000-2020 for Landsat
-        atmospheric correction. target_path should be outside any
-        temporary folder so the database can be used in the next run.
-        Skips the download if the directory exists already and contains
-        the minimum requirement for WVDB (monthly averages)
-        """
+    def setup_wvdb(self, target_dir: str) -> None:
+        """Download the Water Vapor Database 2000-2020 for Landsat."""
         print(f"Downloading Water Vapor Database to {target_dir}...")
         # first check whether the wvdb exists already:
         if os.path.isdir(target_dir):
@@ -298,50 +298,48 @@ class ForceProcess(object):
             if False not in file_exists:
                 print(
                     "Water Vapor Database exists already "
-                    f"in {target_dir}, skipping..."
+                    f"in {target_dir}, skipping...",
                 )
                 self.wvdb_dir = target_dir
             else:
                 print(
                     "Water Vapor Database directory exists, but "
-                    "files are missing, cleaning up and redownloading..."
+                    "files are missing, cleaning up and redownloading...",
                 )
                 for file in os.listdir(target_dir):
                     # remove files
                     if file.startswith(("wrs-2-land", "WVP_", "wvp-global")):
                         os.remove(os.path.join(target_dir, file))
                     else:
-                        raise Exception(
+                        raise ValueError(
                             f"Unexpected file {file} found in "
                             "Water Vapor Database"
                             f"directory {target_dir}. "
-                            "File will not be removed."
-                            "Please provide a new Water "
-                            "Vapor Database directory"
+                            "File will not be removed. "
+                            "Please provide a new Water Vapor Database "
+                            "directory",
                         )
                 self.download_wvdb(target_dir)
         else:
             self.download_wvdb(target_dir)
 
-    def run_force_level2(self):
-        """Runs the Level2 processing - this can be time-consuming!"""
+    def run_force_level2(self) -> None:
+        """Run the Level2 processing - this can be time-consuming."""
         print("Running FORCE Level-2 Processing...")
         cmd_list = ["force-level2", self.config_file]
         # stderr and stdout are not piped here so the FORCE
         # process becomes visible
         run_subprocess(cmd_list, pipe=False)
 
-    def save_log_files(self, target_dir):
-        """Copies the FORCE log files in a target directory."""
+    def save_log_files(self, target_dir: str) -> None:
+        """Copy the FORCE log files into a target directory."""
         target_dir = makedirs(target_dir)
         for logfile in os.listdir(self.log_dir):
             shutil.copy(os.path.join(self.log_dir, logfile), target_dir)
         print(f"FORCE log files copied to {target_dir}")
 
-    def run_force_mosaic(self):
-        """Runs the FORCE mosaic tool that creates .vrt mosaics
-        of individual datacube tiles
-        """
+    def run_force_mosaic(self) -> None:
+        """Run the FORCE mosaic tool to create datacube mosaics."""
         print("Creation of same day mosaics...")
         cmd_list = [
             "force-mosaic",
@@ -360,14 +358,19 @@ class ForceProcess(object):
             link = os.path.join(self.mosaic_path, os.path.basename(vrt_file))
             os.symlink(vrt_file, link)
         print("Creation of same day mosaics finished")
-        pass
 
     def postprocess(
-        self, target_dir, x_min, y_min, x_max, y_max, n_procs=1, save_qai=False
-    ):
-        """
-        Does subsetting and cloud filtering on top of the generated mosaics
-        """
+        self,
+        target_dir: str,
+        x_min: float,
+        y_min: float,
+        x_max: float,
+        y_max: float,
+        n_procs: int = 1,
+        *,
+        save_qai: bool = False,
+    ) -> None:
+        """Subset and cloud-filter the generated mosaics."""
         print("Postprocessing to clear sky mosaics...")
 
         target_dir = makedirs(target_dir)
@@ -375,16 +378,17 @@ class ForceProcess(object):
         files_to_clip = []
         files_in_mosaic_dir = os.listdir(self.mosaic_path)
         if len(files_in_mosaic_dir) == 0:
-            raise Exception(
+            raise ValueError(
                 "No files found in FORCE mosaic "
                 f"directory {self.mosaic_path}. "
-                f"Check FORCE logs in {target_dir} for details."
+                f"Check FORCE logs in {target_dir} for details.",
             )
         for file in files_in_mosaic_dir:
-            if file.endswith("BOA.vrt") or file.endswith("QAI.vrt"):
+            if file.endswith(("BOA.vrt", "QAI.vrt")):
                 outfile_name_tmp = file.replace("BOA.vrt", "BOA_clipped.vrt")
                 outfile_name = outfile_name_tmp.replace(
-                    "QAI.vrt", "QAI_clipped.vrt"
+                    "QAI.vrt",
+                    "QAI_clipped.vrt",
                 )
                 file_list = [
                     os.path.join(self.mosaic_path, file),
@@ -433,7 +437,8 @@ class ForceProcess(object):
             clearsky_cmd_list.append(clearsky_cmd)
             clearsky_files.append(clearsky_name)
         run_subprocess_parallel(
-            cmd_list_list=clearsky_cmd_list, num_processes=n_procs
+            cmd_list_list=clearsky_cmd_list,
+            num_processes=n_procs,
         )
 
         # then: use the binary clearsky map to mask out
@@ -452,10 +457,12 @@ class ForceProcess(object):
                 # in the output as well
                 shutil.copy(clearsky_file, target_dir)
                 boa_file = clearsky_file.replace(
-                    "clearsky.tif", "BOA_clipped.vrt"
+                    "clearsky.tif",
+                    "BOA_clipped.vrt",
                 )
                 out_boa_filename = os.path.basename(boa_file).replace(
-                    "BOA_clipped.vrt", "BOA_clearsky.tif"
+                    "BOA_clipped.vrt",
+                    "BOA_clearsky.tif",
                 )
                 print(f"Creating clear sky mosaic {out_boa_filename}...")
                 out_boa_file = os.path.join(target_dir, out_boa_filename)
@@ -480,7 +487,8 @@ class ForceProcess(object):
                 if save_qai is True:
                     qai_file = clipped_qai_files[i]
                     qai_output_name = os.path.basename(qai_file).replace(
-                        ".vrt", ".tif"
+                        ".vrt",
+                        ".tif",
                     )
                     qai_output_file = os.path.join(target_dir, qai_output_name)
                     ds_gdal = gdal.Open(qai_file)
@@ -497,90 +505,32 @@ class ForceProcess(object):
             else:
                 warnings.warn(
                     f"No valid pixels in <{clearsky_file}>. Either because it "
-                    "is outside the AOI or it is fully cloudy. Skipping..."
+                    "is outside the AOI or it is fully cloudy. Skipping...",
+                    stacklevel=2,
                 )
 
         if len(cloudfree_parallel_list) > 0:
             run_subprocess_parallel(
-                cmd_list_list=cloudfree_parallel_list, num_processes=n_procs
+                cmd_list_list=cloudfree_parallel_list,
+                num_processes=n_procs,
             )
             # finally: update the band descriptions from the original files
             for boa_in, boa_out in boa_input_output.items():
                 update_band_description_from_reference(
-                    target_raster=boa_out, reference_raster=boa_in
+                    target_raster=boa_out,
+                    reference_raster=boa_in,
                 )
 
             print(
                 "Postprocessing of clear sky same day mosaics finished. "
-                f"Results are saved to {target_dir}"
+                f"Results are saved to {target_dir}",
             )
 
-    def cleanup(self):
-        """Deletes all files created during the FORCE processing
-        after finishing up and moving the results
-        """
+    def cleanup(self) -> None:
+        """Delete all files created during the FORCE processing."""
         try:
             shutil.rmtree(self.force_dir)
-        except Exception as exception:
-            raise Exception(
-                f"Error deleting directory {self.force_dir}: " f"{exception}"
-            )
-
-
-"""
-# Example usage:
-test_force = ForceProcess(temp_dir="/path/to/temp/dir",
-                          level1_dir="/path/to/dir/with/satellite/data")
-
-
-# Setup WVDB. If it is already downloaded, specify it in the initialization of
-# the class instance like test_force = ForceProcess(
-    temp_dir="/path/to/temp/dir",
-    level1_dir="/path/to/dir/with/satellite/data",
-    wvdb_dir="/path/to/wvdb")
-# or simply run the following command nonetheless (Download will be skipped)
-test_force.setup_wvdb(target_dir="/path/to/wvdb")
-
-# create a FORCE queue file required to loop over Level1 data
-test_force.create_force_queue_file()
-
-# create a FORCE config file.
-# Adapt n_procs and n_threads according to your system.
-# For few scenes it is recommended to use few procs and more threads
-test_force.create_force_level2_config_file(
-    dem_path="/path/to/DEM",
-    target_proj_epsg=25832,
-    n_procs=1,
-    n_threads=6)
-# alternatively, if you have a FORCE level-2 config file ready
-# with your desired FORCE specifications,
-# update it to be consistent with the initialized ForceProcess instance by
-test_force.update_force_level2_config_file(
-    user_file="/path/to/user_config_file",
-    target_proj_epsg=25832)
-
-# run the level2 processing, this step is time consuming:
-test_force.run_force_level2()
-
-# save the FORCE log files to a desired location
-test_force.save_log_files(target_dir="/path/to/target_dir")
-
-# create mosaics
-test_force.run_force_mosaic()
-
-# postprocess the mosaic by subsetting to the desired BBOX and
-# limiting the valid pixels to clear sky areas.
-# This step may take some time as well.
-# optionally enable the save_qai=True to also output the FORCE QAI files
-test_force.postprocess(
-    target_dir="/path/to/target_dir",
-    x_min=10.44,
-    x_max=11.97,
-    y_min=45.67,
-    y_max=46.54,
-    n_procs=1)
-
-# finally, cleanup all FORCE data except the results.
-# only run the cleanup if you don't want to keep intermediate FORCE files:
-# test_force.cleanup()
-"""
+        except OSError as exception:
+            raise OSError(
+                f"Error deleting directory {self.force_dir}: {exception}",
+            ) from exception

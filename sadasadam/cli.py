@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-#
+# ruff: noqa: TRY003, PTH123, PTH113, PTH118, PTH110, PTH103, PTH112, PTH107
+# ruff: noqa: PTH208, PLR0917, PLR0913, PLR0912, PLR0915, PLR0914
 ############################################################################
 #
 # MODULE:      cli.py
@@ -8,119 +9,129 @@
 # PURPOSE:     Command line interface of sadasadam
 # COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-FileCopyrightText: (c) 2026 by mundialis GmbH & Co. KG
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 ############################################################################
 
+"""Command line interface of sadasadam."""
+
+from __future__ import annotations
+
 import argparse
-from datetime import datetime
 import os
 import shutil
+from datetime import date
+
 import yaml
 
-from sadasadam.force import ForceProcess
 from sadasadam.download import download_and_extract
+from sadasadam.force import ForceProcess
+
+# Constants for coordinate validation
+MIN_LAT = -90
+MAX_LAT = 90
+# NOTE: Longitudes should be between -180 and 180,
+# but -350 etc. should also be understood
+MIN_LON = -360
+MAX_LON = 360
 
 
-def check_filter(start, end, north, south, east, west):
-    """
-    Helper function that checks whether the date and coordinate fields
-    from the config file make sense.
+def check_filter(
+    north: float,
+    south: float,
+    east: float,
+    west: float,
+    start: str | None = None,
+    end: str | None = None,
+) -> None:
+    """Validate the coordinate and date filter values.
+
+    This helper checks whether the date and coordinate fields from the config
+    file make sense.
     """
     north_f = float(north)
     south_f = float(south)
     east_f = float(east)
     west_f = float(west)
-    if north_f < -90 or north_f > 90:
-        raise Exception(
+    if north_f < MIN_LAT or north_f > MAX_LAT:
+        raise ValueError(
             f"The value for north {north} is outside the valid"
-            " -90 to 90 degree range."
+            " -90 to 90 degree range.",
         )
-    if south_f < -90 or south_f > 90:
-        raise Exception(
+    if south_f < MIN_LAT or south_f > MAX_LAT:
+        raise ValueError(
             f"The value for south {south} is outside the valid"
-            " -90 to 90 degree range."
+            f" {MIN_LAT} to {MAX_LAT} degree range.",
         )
     if south_f > north_f:
-        raise Exception(
-            f"The value for south {south} is larger than for north {north}"
+        raise ValueError(
+            f"The value for south {south} is larger than for north {north}",
         )
-    if east_f < -360 or east_f > 360:
-        # best would be -180 to 180 but -350 etc. should also be understood
-        raise Exception(
+    if east_f < MIN_LON or east_f > MAX_LON:
+        raise ValueError(
             f"The value for east {east} is outside the valid"
-            " -360 to 360 degree range."
+            f" {MIN_LON} to {MAX_LON} degree range.",
         )
-    if west_f < -360 or west_f > 360:
-        # best would be -180 to 180 but -350 etc. should also be understood
-        raise Exception(
+    if west_f < MIN_LON or west_f > MAX_LON:
+        raise ValueError(
             f"The value for west {west} is outside the valid"
-            " -360 to 360 degree range."
+            f" {MIN_LON} to {MAX_LON} degree range.",
         )
     if west_f > east_f:
-        raise Exception(
-            f"The value for west {west} is larger than for east {east}."
+        raise ValueError(
+            f"The value for west {west} is larger than for east {east}.",
         )
     if start and end:
-        start_date = datetime.strptime(start, "%Y-%m-%d")
-        end_date = datetime.strptime(end, "%Y-%m-%d")
+        start_date = date.fromisoformat(start)
+        end_date = date.fromisoformat(end)
         if start_date > end_date:
-            raise Exception(
-                f"Start date {start} is later than end date {end}."
+            raise ValueError(
+                f"Start date {start} is later than end date {end}.",
             )
 
 
-def check_bool(variable):
-    """
-    Helper function that checks whether a variable is of type bool and raises
-    and error otherwise
-    """
+def check_bool(variable: object) -> None:
+    """Check whether a variable is a bool and raise an error otherwise."""
     if not isinstance(variable, bool):
-        raise Exception(f"{variable} is not of type boolean (True/False)")
+        raise TypeError(f"{variable} is not of type boolean (True/False)")
 
 
-def main():
-    """
-    Main processing function that connects parsing,
-    download, FORCE processing, postprocessing and cleanup.
-    """
+def main() -> None:
+    """Start the SADASADAM process based on the provided configuration file."""
     parser = argparse.ArgumentParser(
         description="Same Day Satellite DAta Mosaic generation: Automatic "
         "download of Sentinel-2 and Landsat-8/9 data using eodag, atmospheric "
         "correction, mosaic creation and cloud masking "
-        "using FORCE."
+        "using FORCE.",
     )
 
     # Argument for the config file
     parser.add_argument(
-        "--config", type=str, help="Configuration file path", required=True
+        "--config",
+        type=str,
+        help="Configuration file path",
+        required=True,
     )
 
     args = parser.parse_args()
 
     if args.config:
         # Load the configuration from the file
-        with open(args.config, "r") as config_file:
-            config = yaml.load(config_file, Loader=yaml.FullLoader)
+        with open(args.config, encoding="utf-8") as config_file:
+            config = yaml.safe_load(config_file)
 
         # Access the arguments from the configuration file
         s2_scene_ids = config.get("s2_scene_ids")
         s2_scene_ids_file = config.get("s2_scene_ids_file")
         # check if file exists if provided
         if s2_scene_ids_file and not os.path.isfile(s2_scene_ids_file):
-            raise Exception(
-                f"Sentinel-2 Scene IDs file {s2_scene_ids_file} not found"
+            raise FileNotFoundError(
+                f"Sentinel-2 Scene IDs file {s2_scene_ids_file} not found",
             )
         if s2_scene_ids_file and not s2_scene_ids:
-            with open(s2_scene_ids_file, "r") as f:
+            with open(s2_scene_ids_file, encoding="utf-8") as f:
                 s2_scene_ids = [line.strip() for line in f if line.strip()]
 
         north = config.get("north")
@@ -128,20 +139,20 @@ def main():
         east = config.get("east")
         west = config.get("west")
         if not north or not south or not east or not west:
-            raise Exception(
-                "Please provide a bounding box for your area of interest"
+            raise ValueError(
+                "Please provide a bounding box for your area of interest",
             )
         start = config.get("start")
         if not start and not s2_scene_ids:
-            raise Exception(
+            raise ValueError(
                 "Please provide a start date for the temporal extent or a list"
-                " of Sentinel-2 scene IDs or a file containing them"
+                " of Sentinel-2 scene IDs or a file containing them",
             )
         end = config.get("end")
         if not end and not s2_scene_ids:
-            raise Exception(
+            raise ValueError(
                 "Please provide an end date for the temporal extent or a list "
-                "of Sentinel-2 scene IDs or a file containing them"
+                "of Sentinel-2 scene IDs or a file containing them",
             )
         check_filter(
             start=start,
@@ -153,31 +164,31 @@ def main():
         )
         cloud_cover = config.get("cloud_cover")
         if cloud_cover is None and not s2_scene_ids:
-            raise Exception("Please provide a maximum cloud cover")
+            raise ValueError("Please provide a maximum cloud cover")
         tile_id = config.get("tile_id")
 
         products = config.get("products")
         if not products or not all(
-            product in ["S2_MSI_L1C", "LANDSAT_C2L1"] for product in products
+            product in {"S2_MSI_L1C", "LANDSAT_C2L1"} for product in products
         ):
-            raise Exception(
+            raise ValueError(
                 "Please define the satellite products to download and process "
-                "(S2_MSI_L1C and/or LANDSAT_C2L1). "
+                "(S2_MSI_L1C and/or LANDSAT_C2L1).",
             )
         if (
             products[0] == "LANDSAT_C2L1"
             and len(products) == 1
             and not s2_scene_ids
         ):
-            raise Exception(
+            raise ValueError(
                 "Download via Sentinel-2 Scene IDs is only possible with "
                 "Sentinel-2 product <S2_MSI_L1C>. Please add <S2_MSI_L1C> to "
                 "the products list or remove the Sentinel-2 Scene IDs in the "
-                "config file."
+                "config file.",
             )
         output_dir = config.get("output_dir")
         if not output_dir:
-            raise Exception("Please provide an output directory")
+            raise ValueError("Please provide an output directory")
         download_dir = config.get("download_dir")
         if not download_dir:
             # create a download directory under the output directory
@@ -186,7 +197,7 @@ def main():
             os.makedirs(download_dir)
         print(
             "A download directory will be created "
-            "under the output directory"
+            "under the output directory",
         )
         temp_force_dir = config.get("temp_force_dir")
         if not temp_force_dir:
@@ -196,16 +207,16 @@ def main():
             os.makedirs(temp_force_dir)
         print(
             "A temporary directory will be created "
-            "under the output directory"
+            "under the output directory",
         )
         wvdb_dir = config.get("wvdb_dir")
         if not wvdb_dir:
-            raise Exception("Please provide a path to the wvdb directory")
+            raise ValueError("Please provide a path to the wvdb directory")
         target_proj_epsg = config.get("target_proj_epsg")
         if not target_proj_epsg:
             print(
                 "No projection was given. "
-                "A default projection of EPSG:25832 will be used"
+                "A default projection of EPSG:25832 will be used",
             )
             target_proj_epsg = 25832
 
@@ -217,43 +228,43 @@ def main():
             elif not os.path.isfile(force_param_file):
                 print(
                     f"FORCE parameter file {force_param_file} not found, "
-                    "using parameters from sadasam config file"
+                    "using parameters from sadasam config file",
                 )
             else:
                 use_param_file = True
         if use_param_file is False:
             dem_path = config.get("dem_path")
             if not dem_path:
-                raise Exception(
+                raise ValueError(
                     "Please provide a path to the DEM file, "
-                    "or define a force_param_file"
+                    "or define a force_param_file",
                 )
             n_procs_force = config.get("n_procs_force")
             if not n_procs_force:
-                raise Exception(
+                raise ValueError(
                     "Please provide the number of "
                     "processes to use for FORCE, or "
-                    "define a force_param_file"
+                    "define a force_param_file",
                 )
             n_threads_force = config.get("n_threads_force")
             if not n_threads_force:
-                raise Exception(
+                raise ValueError(
                     "Please provide the number of "
                     "threads to use for FORCE, or "
-                    "define a force_param_file"
+                    "define a force_param_file",
                 )
             cloud_buffer = config.get("cloud_buffer")
             if not cloud_buffer:
-                raise Exception(
+                raise ValueError(
                     "Please provide a cloud buffer, "
-                    "or define a force_param_file"
+                    "or define a force_param_file",
                 )
 
         n_procs_postprocessing = config.get("n_procs_postprocessing")
         if not n_procs_postprocessing:
-            raise Exception(
+            raise ValueError(
                 "Please provide the number of "
-                "processes to use for postprocessing"
+                "processes to use for postprocessing",
             )
 
         save_qai = config.get("save_qai")
@@ -281,12 +292,12 @@ def main():
         if force_only:
             print(
                 "Process will skip downloading "
-                "and only run FORCE and postprocessing"
+                "and only run FORCE and postprocessing",
             )
         if force_only is True and download_only is True:
-            raise Exception(
+            raise ValueError(
                 "Parameters <force_only> and <download_only> "
-                "are both True. Nothing to do."
+                "are both True. Nothing to do.",
             )
 
         # Start Downloading
@@ -319,7 +330,8 @@ def main():
             print("Setting up FORCE processing...")
             # start FORCE process
             force_proc = ForceProcess(
-                temp_dir=temp_force_dir, level1_dir=download_dir
+                temp_dir=temp_force_dir,
+                level1_dir=download_dir,
             )
             # water vapor database setup is only needed for Landsat data
             if "LANDSAT_C2L1" in products:
@@ -374,7 +386,7 @@ def main():
                         "S2C",
                         "queue",
                         ".downloaded",
-                    )
+                    ),
                 ):
                     file_path = os.path.join(download_dir, scene)
                     if os.path.isdir(file_path):
