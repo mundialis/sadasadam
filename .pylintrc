@@ -26,6 +26,9 @@ disable=
         missing-module-docstring, ; we use the GRASS GIS header
         R, ; refactoring + design recommendations
 
+[BASIC]
+# for global variable setting
+good-names=keep_data,download_dir,gisdbase,tgtgisrc,tmploc,srcgisrc
 
 [BROAD_TRY_CLAUSE]
 max-try-statements=4 # Default: 1
@@ -34,6 +37,10 @@ max-try-statements=4 # Default: 1
 max-line-length=80 # Default: 100
 max-module-lines=800 # Default: 1000
 ignore-long-lines=.*COPYRIGHT:.* |# . description:.*|\s*(# )?.*http.:\/\/\S+?|# %%*
+
+[MESSAGES CONTROL]
+# E0606 (possibly-used-before-assignment): to set options and flags at the bottom of the file without pre-initialization
+disable=E0606
 
 [VARIABLES]
 additional-builtins=_ # Default: ()

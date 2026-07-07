@@ -110,7 +110,7 @@ def extract_and_delete_tar_gz_files(directory: str) -> list:
             warning_text = (
                 "Warning: - "
                 f"Unable to extract: {file_path}. "
-                "Retrying Download...",
+                "Retrying Download..."
             )
             landsat_extract_dir = None
             remove = True
