@@ -33,3 +33,5 @@ dependencies = [
 "Homepage" = "https://github.com/mundialis/sadasadam"
 "Bug Tracker" = "https://github.com/mundialis/sadasadam"
 
+[tool.setuptools.packages.find]
+include = ["sadasadam*"]

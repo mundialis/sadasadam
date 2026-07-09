@@ -1,3 +1,4 @@
 docker/.env
 ruff-github-workflows.toml
 ruff-merged.toml
+.pylintrc

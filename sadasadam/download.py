@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: TRY003, PTH208, PLR0913, PLR0917, PTH118, PTH103, PTH107
 ############################################################################
 #
 # MODULE:      download.py

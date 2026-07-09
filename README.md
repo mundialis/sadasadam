@@ -208,7 +208,7 @@ depending on data filtering and parallelization options defined in the config fi
 #### Using SADASADAM with docker
 
 This repository contains a Dockerfile to build a docker image with SADASADAM and
-all dependencies installed. The dockerfile use the a
+all dependencies installed. The dockerfile uses a
 [FORCE docker](https://hub.docker.com/r/davidfrantz/force) image as base image
 and adds SADASADAM and its dependencies on top of it.
 Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE and USGS. The eodag config file will be created automatically when the container starts.
@@ -225,11 +225,12 @@ config file for the `download_dir`, `temp_force_dir`, `wvdb_dir`, and
 `output_dir` parameters and the DEM path. For example, you can mount a local
 folder `/local/path/to/data` to the container folder `/src/data`. Either use
 that directory also for the `config_dir` or mount a separate local folder for
-the config file. Then run SADASADAM with the following command:
+the config file. Modify `volumes` in the `./docker/docker-compose.yml` file to
+ reflect these paths. Then run SADASADAM with the following command:
 
 
 ```bash
-docker compose -f docker/docker-compose.yml run --rm -v /local/path/to/data:/src/data -v /local/path/to/config_dir:/src/config sadasadam --config /src/config/config_example.yaml
+docker compose -f docker/docker-compose.yml run --rm sadasadam --config /src/config/config_example.yaml
 ```
 
 #### Using SADASADAM with Singularity

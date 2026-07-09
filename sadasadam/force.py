@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: TRY003, PTH123, PTH118, PTH110, PTH103, PTH112, PTH107
-# ruff: noqa: PTH208, PTH207, PTH119, PTH211 PLR0917, PLR0913, PLR0912, PLR0915
-# ruff: noqa: PLR0914, S603, S404, S202
 ############################################################################
 #
 # MODULE:      force.py

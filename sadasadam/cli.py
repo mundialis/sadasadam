@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-# ruff: noqa: TRY003, PTH123, PTH113, PTH118, PTH110, PTH103, PTH112, PTH107
-# ruff: noqa: PTH208, PLR0917, PLR0913, PLR0912, PLR0915, PLR0914
 ############################################################################
 #
 # MODULE:      cli.py
