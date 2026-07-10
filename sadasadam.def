@@ -11,7 +11,9 @@ From: davidfrantz/force
     * /sadasadam/
 
 %post
-    apt install ipython3
+    mkdir -p /var/cache/apt/archives/partial
+    apt update
+    apt install -y ipython3
     # install SADASADAM
     cd /sadasadam/
     pip install .

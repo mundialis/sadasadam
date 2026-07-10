@@ -21,36 +21,35 @@
     - [General process options](#general-process-options)
   - [Running SADASADAM](#running-sadasadam)
 
-# Introduction
+## Introduction
 
 SADASADAM is a command line tool that generates Sentinel-2 and Landsat-8/9 same-day mosaics for a user-defined bounding box and temporal extent.
 It uses the python package [eodag](https://eodag.readthedocs.io/en/stable/index.html) to search and download data and the
 software [FORCE](https://force-eo.readthedocs.io/en/latest/index.html) for atmospheric correction, cloud detection, and mosaic creation.
 
-# Requirements
+## Requirements
 
 ### [FORCE](https://force-eo.readthedocs.io/en/latest/index.html)
 
 needs to be installed on the system. FORCE in turn has many dependencies and takes some steps to install. See the detailed
 installation instructions from the [FORCE documentation](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
-SADASADAM was developed and tested using FORCE v.3.7.11.
+SADASADAM was developed and tested using FORCE v.3.10.04.
 
 ### [GDAL](https://gdal.org)
 
 and its Python bindings need to be installed, but they should be a requirement for FORCE anyway. SADASADAM was developed
-and tested using GDAL v.3.4.1. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
+and tested using GDAL v.3.8.4. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
 GDAL is often available in most systems but needs to be installed if not already present.
 
 ### Python libraries
 
-SADASADAM requires the Python libraries `pyyaml`, `eodag`, `gdal`, `gdal-utils`, and `requests` which should be installed automatically
-when installing SADASADAM (see next section)
+SADASADAM requires the Python libraries `pyyaml`, `eodag`, `gdal`, `gdal-utils`, and `requests` which should be installed automatically when installing SADASADAM (see next section). SADASADAM was developed and tested using `eodag` v.4.4.0
 
-# Installation
+## Installation
 
 SADASADAM can be installed as follows:
 
-```
+```bash
 # clone the repository from github
 git clone git@github.com:mundialis/sadasadam.git
 
@@ -61,32 +60,42 @@ pip install .
 
 Note that `pip install .` command does install the packages locally from the current directory.
 
+Alternatively, you can use SADADAM in a docker container.
+
 ### eodag configuration
 
 The steps above will automatically install the Python library [eodag](https://eodag.readthedocs.io/en/stable/index.html) as well.
 Before running SADASADAM, eodag needs to be configured (see [eodag documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html)).
-The eodag config file needs to be filled with credentials for satellite data providers. SADASADAM calls eodag to download only Sentinel-2
-and Landsat-8/9 Level 1C data. Therefore, providing credentials to the `cop_dataspace` and `usgs` sections of the eodag config file
-is recommended. It is recommended to define `extract: False` in the eodag config file as SADASADAM automatically extracts the downloaded data according to the input requirements of FORCE.
+The eodag config file needs to be filled with credentials for satellite data providers.
+SADASADAM calls eodag to download only Sentinel-2 and Landsat-8/9 Level 1C data.
+Therefore, providing credentials to the `cop_dataspace` and `usgs` sections of
+the eodag config file is recommended. It is recommended to define
+`extract: False` in the eodag config file as SADASADAM automatically extracts
+the downloaded data according to the input requirements of FORCE.
 
-A priority of providers can be defined in the eodag config file. We noticed the unexpected behaviour that download of Sentinel-2
-from `cop_dataspace` fails (error related to `peps` provider credentials), if both `cop_dataspace` and `usgs` have the same priority.
-A functioning workaround seems to be to **set the priority of `cop_dataspace` to 2, and that of `usgs` to 1** - this way both Sentinel-2 and
-Landsat download worked in our tests.
+SADASADAM will only use `cop_dataspace` and `usgs` as providers for Sentinel-2 and Landsat-8/9 data, respectively. Therefore, priorities settings in the eodag config file can be ignored.
 
-# Usage
+## Usage
 
 ### Overview
 
 SADASADAM can be executed with one single command, but internally, the script can be divided into three consecutives steps:
 
-##### Download of satellite data
+#### Download of satellite data
 
-SADASADAM will try to download all Sentinel-2 and Landsat-8/9 Level 1C scenes that match the filter options passed in the SADASADAM config file.
+SADASADAM will try to download all Sentinel-2 and/or Landsat-8/9 Level 1C scenes that match the filter options passed in the SADASADAM config file.
 It makes use of user credentials and download paths defined in the eodag config file (see section above). The download path however can also be overwritten by
 the `download_dir` parameter of the SADASADAM config file. All data are extracted, corrupt archives are removed and tried to download again.
 
-##### FORCE processing
+Availabe filter options are:
+- start and end date for the temporal filter of satellite data download in format YYYY-MM-DD
+- north, south, east, west for the AOI boundary in decimal degree
+- cloud_cover for the maximum percentage of cloud cover in scene
+- Sentinel-2 grid tile ID if only scenes for a specific tile should be downloaded, e.g. 32UMB (for Sentinel-2 product only)
+
+Additonally, for Sentinel-2 scenes the user can provide a list of specific Sentinel-2 scene IDs for downloading specific scenes. If this list is not empty, the other parameters (start, end, cloud_cover, tile_id) will be ignored.
+
+#### FORCE processing
 
 SADASADAM generates atmospherically corrected Level-2 same-day mosaics from the L1C data with [FORCE](https://force-eo.readthedocs.io/en/latest/index.html).
 FORCE will take all scenes that are in the eodag download directory as input. Therefore, it is recommended to remove the downloaded scenes after each run using `clear_download: True`.
@@ -98,13 +107,13 @@ temporary FORCE directory after processing). FORCE parametrization may either be
 or by defining a path to a user-defined FORCE parameter file using `force_param_file` (SADASADAM will create an internal copy of this file and will only overwrite
 the FORCE-internal directories). See also this [FORCE tutorial](https://force-eo.readthedocs.io/en/latest/howto/l2-ard.html#the-parameter-file) for more information on the FORCE Level 2 parameter file.
 
-##### Postprocessing
+#### Postprocessing
 
 In the final step, the mosaics are cropped to the final extent and clouds are removed using the `clear sky` information of the FORCE Quality Assurance Information ([QAI](https://force-eo.readthedocs.io/en/latest/howto/qai.html))
 masks. GDAL methods `gdal_translate` and `gdal_calc.py` are used internally for this step. Resulting cloud masked same-day reflectance mosaics are saved as multiband GeoTiffs to the output folder defined in `output_dir` in the SADASADAM config file.
 The clear sky binary mask (+ optionally the FORCE QAI masks) as well as FORCE log files are moved to the output folder as well.
 
-##### Output
+#### Output
 
 SADASADAM will produce the following output files in the `output_dir`:
 
@@ -115,11 +124,11 @@ SADASADAM will produce the following output files in the `output_dir`:
 
 ### Config file
 
-The parameters of the SADASADAM config file are described below in detail. See also the example config file [here](config_example.yaml).
+The parameters of the SADASADAM config file are described below in detail. See also the example [config file](config_example.yaml).
 
-##### Data filtering options
+#### Data filtering options
 
-```
+```yaml
 start: '2023-08-01'   # start date for temporal filter of satellite data download in format YYYY-MM-DD
 end: '2023-08-31'     # end date for temporal filter of satellite data download in format YYYY-MM-DD
 north: 46.6           # AOI boundary in decimal degree
@@ -127,11 +136,12 @@ south: 45.67          # AOI boundary in decimal degree
 east: 11.97           # AOI boundary in decimal degree
 west: 10.44           # AOI boundary in decimal degree
 cloud_cover: 75       # maximum percentage of cloud cover in scene
+tile_id: '32UMB'      # Sentinel-2 tiling grid ID
 ```
 
-##### FORCE & postprocessing options
+#### FORCE & postprocessing options
 
-```
+```yaml
 download_dir: '/path/to/download_dir'           # Path to the download directory. FORCE will use all valid satellite
                                                 # scenes (extracted Landsat-8/9 and Sentinel-2 in .SAFE format) in this directory as input.
 temp_force_dir: '/path/to/temp_force_dir'       # Path to a directory that can hold intermediate FORCE results. A new FORCE directory with a timestamp will be created here.
@@ -148,7 +158,7 @@ save_qai: False                                 # Whether or not the FORCE Quali
 
 The following parameters of the SADASADAM config file are steering FORCE processing in the FORCE parameter file (see [FORCE tutorial](https://force-eo.readthedocs.io/en/latest/howto/l2-ard.html#parameterization)):
 
-```
+```yaml
 dem_path: '/path/to/a/local/dem.tif'            # Path to a local digital elevation model used for topographic correction. It is recommended to use a DEM with an extent larger than
                                                 # the AOI as FORCE processes the entire scenes.
 n_procs_force: 4                                # Number of parallel processes for FORCE. FORCE uses a multiprocessing/multithreading approach. The best combination of processes
@@ -162,7 +172,7 @@ and apply recommended values for the remaining parameters (see also `create_forc
 
 Alternatively, the user can provide a complete FORCE parameter file through the config parameter `force_param_file`:
 
-```
+```yaml
 force_param_file = '/path/to/local/force_param_file' # Path to a complete user-configured FORCE parameter file. The first block
                                                      # (INPUT/OUTPUT DIRECTORIES) does not need to be filled, SADASADAM will adapt
                                                      # it to match the local temporary FORCE directory structure
@@ -170,9 +180,9 @@ force_param_file = '/path/to/local/force_param_file' # Path to a complete user-c
 
 In this case, the parameters `dem_path`, `n_procs_force`, `n_threads_force`, and `cloud_buffer` are ignored.
 
-##### General process options
+#### General process options
 
-```
+```yaml
 clear_download: True  # Will clear the content of the download directory <download_dir> after processing. FORCE
                       # always uses the entire content of <download_dir> as input, so setting this to True is
                       # recommended. However, it may make sense to set it to False for debugging purposes, e.g.
@@ -188,12 +198,40 @@ force_only: False     # Setting this parameter to True skips the download and di
 
 Run SADASADAM by simply passing the SADASADAM config.yaml file:
 
-```commandline
+```bash
 sadasadam --config /path/to/sadasadam_conf_file.yaml
 ```
 
 Note: This will start the entire process (data download, FORCE processing, postprocessing) and may take a lot of time
 depending on data filtering and parallelization options defined in the config file.
+
+#### Using SADASADAM with docker
+
+This repository contains a Dockerfile to build a docker image with SADASADAM and
+all dependencies installed. The dockerfile uses a
+[FORCE docker](https://hub.docker.com/r/davidfrantz/force) image as base image
+and adds SADASADAM and its dependencies on top of it.
+Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE and USGS. The eodag config file will be created automatically when the container starts.
+
+1. Build the docker image with the following command:
+
+```bash
+docker compose -f docker/docker-compose.yml build
+```
+
+2. In order to have access to the processed data you need to mount a local
+folder to the docker container. Use the path of this folder in the SADASADAM
+config file for the `download_dir`, `temp_force_dir`, `wvdb_dir`, and
+`output_dir` parameters and the DEM path. For example, you can mount a local
+folder `/local/path/to/data` to the container folder `/src/data`. Either use
+that directory also for the `config_dir` or mount a separate local folder for
+the config file. Modify `volumes` in the `./docker/docker-compose.yml` file to
+ reflect these paths. Then run SADASADAM with the following command:
+
+
+```bash
+docker compose -f docker/docker-compose.yml run --rm sadasadam --config /src/config/config_example.yaml
+```
 
 #### Using SADASADAM with Singularity
 
@@ -201,18 +239,20 @@ Singularity is a free and open source container platform released with BSD licen
 
 To run SADASADAM with Singularity you need first to create the container using the `sadasadam.def` receipt file. To build the container image you need to be root.
 
-```commandline
+```bash
 sudo singularity build sadasadam.simg sadasadam.def
 ```
 
 At this point it is possible to run SADASADAM into the created container.
 
-```commandline
+```bash
 singularity exec sadasadam.simg sadasadam --config config.yaml
 ```
 
-If you need to pass the EODAG configuration file you can use the `EODAG_CFG_FILE` environmental variable as written in [EODAG documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html#yaml-user-configuration-file)
+If you need to pass the EODAG configuration file you can use the
+`EODAG_CFG_FILE` environmental variable as written in
+[EODAG documentation](https://eodag.readthedocs.io/en/stable/getting_started_guide/configure.html#yaml-user-configuration-file)
 
-```commandline
+```bash
 singularity exec --env EODAG_CFG_FILE=/PATH/TO/eodag.yml sadasadam.simg sadasadam --config config.yaml
 ```

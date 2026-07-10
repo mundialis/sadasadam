@@ -16,7 +16,7 @@ recursive=yes # Default: False
 
 
 [BROAD_TRY_CLAUSE]
-max-try-statements=4 # Default: 1
+max-try-statements=15 # Default: 1
 
 [FORMAT]
 max-line-length=80 # Default: 100
@@ -26,25 +26,44 @@ ignore-long-lines=.*COPYRIGHT:.* |# . description:.*|\s*(# )?.*http.:\/\/\S+?|# 
 [VARIABLES]
 additional-builtins=_ # Default: ()
 
+[DESIGN]
+# Maximum number of arguments for function / method.
+# Default: 5
+max-args=12
+max-positional-arguments=9
 
-; [DESIGN]
+# Maximum number of attributes for a class (see R0902).
+# Default: 7
+max-attributes=15
 
-; # Maximum number of arguments for function / method.
-; # Default: 5
-; max-args=9
+# Maximum number of boolean expressions in an if statement (see R0916).
+# Default: 5
+max-bool-expr=6
 
-; # Maximum number of attributes for a class (see R0902).
-; # Default: 7
-; max-attributes=11
+# Maximum number of branch for function / method body.
+# Default: 12
+max-branches=50
 
-; # Maximum number of branch for function / method body.
-; # Default: 12
-; max-branches=15
+# Maximum number of locals for function / method body.
+# Default: 15
+max-locals=40
 
-; # Maximum number of locals for function / method body.
-; # Default: 15
-; max-locals=19
+# Maximum number of parents for a class (see R0901).
+# Default: 7
+max-parents=10
 
-; # Maximum number of return / yield for function / method body.
-; # Default: 6
-; max-returns=11
+# Maximum number of public methods for a class (see R0904).
+# Default: 20
+max-public-methods=25
+
+# Maximum number of return / yield for function / method body.
+# Default: 6
+max-returns=11
+
+# Maximum number of statements in function / method body.
+# Default: 50
+max-statements=150
+
+# Minimum number of public methods for a class (see R0903).
+# Default: 2
+min-public-methods=1

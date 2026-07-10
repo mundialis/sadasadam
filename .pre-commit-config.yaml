@@ -1,0 +1,6 @@
+---
+repos:
+  - repo: https://github.com/mundialis/github-workflows
+    rev: 1.6.0
+    hooks:
+      - id: linting
