@@ -1,43 +1,62 @@
+---
 ############################################################################
 #
 # MODULE:      sadasadam config_example.yaml
-# AUTHOR(S):   Momen Mawad, Guido Riembauer
+# AUTHOR(S):   Momen Mawad, Guido Riembauer, Jonas Pischke
 #
 # PURPOSE:     Config file for sadasadam
-# COPYRIGHT:   (C) 2023 by mundialis GmbH & Co. KG
 #
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# SPDX-FileCopyrightText: (c) 2026 by mundialis GmbH & Co. KG
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-#############################################################################
+############################################################################
 
 # type=float, help='Northern boundary of AOI in decimal degrees'
-north: 46.6
+north: 50.774
 
 # type=float, help='Southern boundary of AOI in decimal degrees. Must be smaller than north'
-south: 45.67
+south: 50.632
 
 # type=float, help='Eastern boundary of AOI in decimal degrees'
-east: 11.97
+east: 7.211
 
 # type=float, help='Western boundary of AOI in decimal degrees. Must be smaller than east'
-west: 10.44
+west: 7.024
 
 # type=str, help='Start date of temporal extent in ISO format (YYYY-MM-DD)'
-start: '2023-08-01'
+start: '2026-07-01'
 
 # type=str, help='End date of temporal extent ISO format (YYYY-MM-DD)'
-end: '2023-08-15'
+end: '2026-07-08'
 
 # type=int, help='Max. cloud cover (1-100) of scenes to download.'
 cloud_cover: 100
+
+# type=str, help='Sentinel-2 tiling grid ID (e.g., 32UMB) if only scenes for a specific tile shall be downloaded, otherwise leave empty. Only for Sentinel-2 products. Only one tile id is allowed. Make sure AOI covers the tile extent. If not, no data will be found to download and process.'
+tile_id: # 31UGS
+
+# type=list, help='Sentinel-2 scene IDs for downloading specific scenes. If this list is not empty, the other filter parameters (start, end, cloud_cover) will be ignored. Make sure AOI covers the scenes.'
+s2_scene_ids:
+#  - 'S2A_MSIL1C_20260704T102701_N0512_R108_T32ULB_20260704T170718'
+#  - 'S2A_MSIL1C_20260704T102701_N0512_R108_T31UGS_20260704T170718'
+
+# type=str, help='Path to a txt file with Sentinel-2 Scene IDs for downloading specific scenes. If this list is not empty, the other filter parameters (start, end, cloud_cover) and the s2_scene_ids parameter will be ignored. Make sure AOI covers the extent of the scenes.'
+s2_scene_ids_file: # '/path/to/s2_scene_ids.txt'
+
+# type=list, help='Satellite products to download and process. Note: the according credentials must be provided in the eodag.yaml for the specific products'
+# examples:
+#   products:
+#     - S2_MSI_L1C      Only Sentinel 2
+#
+#   products:
+#     - LANDSAT_C2L1    Only Landsat
+#
+#   products:
+#     - S2_MSI_L1C      Both Sentinel & Landsat
+#     - LANDSAT_C2L1
+products:
+  - S2_MSI_L1C
 
 # type=str, help='Path to folder where output is stored'
 output_dir: '/path/to/output/dir/'
@@ -46,9 +65,9 @@ output_dir: '/path/to/output/dir/'
 download_dir: '/path/to/download/dir/'
 
 # type=str, help='Path to folder where FORCE processing is done'
+# type=str, help='Path to folder where the Water Vapor Database is stored permanently (also for several runs). It can be an empty folder for sadasadam will fetch the data online.'
 temp_force_dir: '/path/to/temp_force/dir/'
 
-# type=str, help='Path to folder where the Water Vapor Database is stored permanently (also for several runs). It can be an empty folder for sadasadam will fetch the data online.'
 wvdb_dir: '/path/to/wvdb/dir/'
 
 # type=str, help='Path to DEM file used for FORCE'

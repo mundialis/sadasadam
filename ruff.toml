@@ -1,0 +1,4 @@
+[lint.per-file-ignores]
+"sadasadam/cli.py" = ["TRY003", "PTH123", "PTH113", "PTH118", "PTH110", "PTH103", "PTH112", "PTH107", "PTH208", "PLR0917", "PLR0913", "PLR0912", "PLR0915", "PLR0914"]
+"sadasadam/download.py" = ["TRY003", "PTH208", "PLR0913", "PLR0917", "PTH118", "PTH103", "PTH107"]
+"sadasadam/force.py" = ["TRY003", "PTH123", "PTH118", "PTH110", "PTH103", "PTH112", "PTH107", "PTH208", "PTH207", "PTH119", "PTH211", "PLR0917", "PLR0913", "PLR0912", "PLR0915", "PLR0914", "S603", "S404", "S202"]
