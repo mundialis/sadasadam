@@ -23,7 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "eodag==4.4.0",
-  "gdal==3.8.4",
+  "gdal==3.13.1",
   "gdal-utils==3.8.4",
   "pyyaml",
   "requests",
