@@ -6,8 +6,7 @@ services:
       dockerfile: docker/Dockerfile
     volumes:
     # Modify the paths below to point to your local data and config directories
-      # - /local/path/to/data:/src/data
-      # - /local/path/to/config_dir:/src/config
-      - /home/jpischke/geodata/sadasadam_data_test_2:/src/data
+      - /local/path/to/data:/src/data
+      - /local/path/to/config_dir:/src/config
     env_file:
       - .env
