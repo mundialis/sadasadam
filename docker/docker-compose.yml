@@ -6,7 +6,7 @@ services:
       dockerfile: docker/Dockerfile
     volumes:
     # Modify the paths below to point to your local data and config directories
-      - /local/path/to/data:/src/data
-      - /local/path/to/config_dir:/src/config
+      - /path/on/host/to/data:/src/data
+      - /path/on/host/to/config_dir:/src/config
     env_file:
       - .env
