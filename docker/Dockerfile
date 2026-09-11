@@ -6,7 +6,7 @@ COPY . /src/sadasadam/
 # Copy startup script into the image
 COPY --chmod=755 docker/start.sh /src/start.sh
 WORKDIR /src/sadasadam
-RUN apt-get update && \
+RUN apt-get update && apt-get upgrade -y && \
     apt-get install --no-install-recommends --yes python3-pip && \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip install . --no-cache-dir --break-system-packages
