@@ -215,6 +215,10 @@ class ForceProcess:
             f"CLOUD_BUFFER  = {cloud_buffer}",
             f"NPROC = {n_procs}",
             f"NTHREAD = {n_threads}",
+            # COG output deadlocks force-l2ps while building the QAI.tif
+            # overview (all threads stuck in futex_do_wait) with the GDAL
+            # version bundled in FORCE >= 3.11.00. GTiff is not affected.
+            "OUTPUT_FORMAT = GTiff",
         ]
         self.__replace_in_config_file(
             old_config_file=config_file_dummy,
@@ -273,8 +277,7 @@ class ForceProcess:
         os.remove(target_file_path)
         self.wvdb_dir = target_dir
         print(
-            "Water Vapor Database downloaded and "
-            f"extracted to {target_dir}",
+            "Water Vapor Database downloaded and " f"extracted to {target_dir}",
         )
 
     def setup_wvdb(self, target_dir: str) -> None:
@@ -369,7 +372,6 @@ class ForceProcess:
     ) -> None:
         """Subset and cloud-filter the generated mosaics."""
         print("Postprocessing to clear sky mosaics...")
-
         target_dir = makedirs(target_dir)
         # first: clip BOA and QAI mosaics to the final extent
         files_to_clip = []

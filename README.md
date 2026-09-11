@@ -33,12 +33,12 @@ software [FORCE](https://force-eo.readthedocs.io/en/latest/index.html) for atmos
 
 needs to be installed on the system. FORCE in turn has many dependencies and takes some steps to install. See the detailed
 installation instructions from the [FORCE documentation](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
-SADASADAM was developed and tested using FORCE v.3.10.04.
+SADASADAM was developed and tested using FORCE v.3.11.00.
 
 ### [GDAL](https://gdal.org)
 
 and its Python bindings need to be installed, but they should be a requirement for FORCE anyway. SADASADAM was developed
-and tested using GDAL v.3.8.4. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
+and tested using GDAL v.3.13.2. See also the [GDAL dependency of FORCE](https://force-eo.readthedocs.io/en/latest/setup/depend.html).
 GDAL is often available in most systems but needs to be installed if not already present.
 
 ### Python libraries
@@ -211,23 +211,41 @@ This repository contains a Dockerfile to build a docker image with SADASADAM and
 all dependencies installed. The dockerfile uses a
 [FORCE docker](https://hub.docker.com/r/davidfrantz/force) image as base image
 and adds SADASADAM and its dependencies on top of it.
-Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE and USGS. The eodag config file will be created automatically when the container starts.
+Create a `.env` file based on the `.env_sample` file in the `docker` folder to define your credentials for CDSE Sentinel-2 and USGS for Landsat data. The eodag config file will be created automatically when the container starts.
 
 1. Build the docker image with the following command:
 
-```bash
+``` bash
 docker compose -f docker/docker-compose.yml build
 ```
 
-2. In order to have access to the processed data you need to mount a local
-folder to the docker container. Use the path of this folder in the SADASADAM
-config file for the `download_dir`, `temp_force_dir`, `wvdb_dir`, and
-`output_dir` parameters and the DEM path. For example, you can mount a local
-folder `/local/path/to/data` to the container folder `/src/data`. Either use
-that directory also for the `config_dir` or mount a separate local folder for
-the config file. Modify `volumes` in the `./docker/docker-compose.yml` file to
- reflect these paths. Then run SADASADAM with the following command:
+2. To access the processed data, mount a local folder into the container.
 
+      - In `docker/docker-compose.yml`, mount a local folder to /src/data:
+
+    ```  yaml
+      volumes:
+        - /path/on/host:/src/data
+    ```
+
+      - In the SADASADAM config file, point the relevant paths at that mount, e.g.:
+      
+    ``` yaml
+      download_dir: /src/data/download_dir
+      temp_force_dir: /src/data/temp_force_dir
+      wvdb_dir: /src/data/wvdb_dir
+      output_dir: /src/data/output_dir
+      dem_path: /src/data/dem.tif
+      config_path: /src/data/config.yaml
+    ```
+   - Optionally, mount a separate local folder for the config file and set that folder's path as config_dir in the config file.
+
+   ```  yaml
+      volumes:
+        - /path/on/host/to/config_dir:/src/config
+    ```
+
+3. Run SADASADAM with the following command (Note: use the correct path to your config file):
 
 ```bash
 docker compose -f docker/docker-compose.yml run --rm sadasadam --config /src/config/config_example.yaml
