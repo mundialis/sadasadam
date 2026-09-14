@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import os
 import shutil
+import warnings
 from datetime import date
 
 import yaml
@@ -253,8 +254,10 @@ def main() -> None:
                 )
             max_cloud_cover_frame = config.get("max_cloud_cover_frame")
             if not max_cloud_cover_frame:
-                raise Warning(
+                max_cloud_cover_frame = 100
+                warnings.warn(
                     "No max cloud cover frame provided, using default value of 100",
+                    stacklevel=2,
                 )
             cloud_buffer = config.get("cloud_buffer")
             if not cloud_buffer:
@@ -266,27 +269,31 @@ def main() -> None:
             if not shadow_buffer:
                 # set default value for shadow buffer if not provided
                 shadow_buffer = 90
-                raise Warning(
+                warnings.warn(
                     "No shadow buffer provided, using default value of 90",
+                    stacklevel=2,
                 )
             cirrus_buffer = config.get("cirrus_buffer")
             if not cirrus_buffer:
                 # set default value for cirrus buffer if not provided
                 cirrus_buffer = 0
-                raise Warning(
+                warnings.warn(
                     "No cirrus buffer provided, using default value of 0",
+                    stacklevel=2,
                 )
             cloud_threshold = config.get("cloud_threshold")
             if not cloud_threshold:
                 cloud_threshold = 0.225
-                raise Warning(
+                warnings.warn(
                     "No cloud threshold provided, using default value of 0.225",
+                    stacklevel=2,
                 )
             shadow_threshold = config.get("shadow_threshold")
             if not shadow_threshold:
                 shadow_threshold = 0.02
-                raise Warning(
+                warnings.warn(
                     "No shadow threshold provided, using default value of 0.02",
+                    stacklevel=2,
                 )
 
         n_procs_postprocessing = config.get("n_procs_postprocessing")
