@@ -87,8 +87,23 @@ force_param_file: '/path/to/force-parameter-file.cfg'
 n_procs_force: 1
 n_threads_force: 2
 
+# type=int, help='Max. cloud cover (1-100) of AOI to process in FORCE. Must be defined if no force_param_file is given, otherwise the default value of 100 will be used'
+max_cloud_cover_frame: 100
+
 # type=int, help='Cloud buffer in meters. Must be defined if no force_param_file is given'
 cloud_buffer: 300
+
+# type=int, help='Shadow buffer in meters. Must be defined if no force_param_file is given, otherwise the default value of 90 meters will be used'
+shadow_buffer: 90
+
+# type=int, help='Cirrus buffer in meters. Must be defined if no force_param_file is given, otherwise the default value of 0 meters will be used'
+cirrus_buffer: 0
+
+# type=float, help='Cloud threshold for cloud mask. Must be defined if no force_param_file is given, otherwise the default value of 0.225 will be used'
+cloud_threshold: 0.225
+
+# type=float, help='Shadow threshold for shadow mask. Must be defined if no force_param_file is given, otherwise the default value of 0.02 will be used'
+shadow_threshold: 0.02
 
 # type=int, help='Number of processes for postprocessing with GDAL (no multithreading available).'
 n_procs_postprocessing: 1

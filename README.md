@@ -164,7 +164,12 @@ dem_path: '/path/to/a/local/dem.tif'            # Path to a local digital elevat
 n_procs_force: 4                                # Number of parallel processes for FORCE. FORCE uses a multiprocessing/multithreading approach. The best combination of processes
                                                 # and threads heavily depends on your system and the amount/size of scenes to process  (see also FORCE Level 2 ARD tutorial for recommendations).
 n_threads_force: 2                              # Number of threads per process for multithreading in FORCE.
+max_cloud_cover_frame: 100                          # Max. cloud cover (1-100) of AOI to process in FORCE. If above threshold the scene will be skipped.
 cloud_buffer: 300                               # Cloud buffer to be applied to the confident clouds in FORCE.
+shadow_buffer: 90                              # Shadow buffer to be applied to the confident shadows in FORCE.
+cirrus_buffer: 0                               # Cirrus buffer to be applied to the confident cirrus in FORCE.
+cloud_threshold: 0.225                            # Threshold for cloud mask in FORCE.
+shadow_threshold: 0.02                            # Threshold for shadow mask in FORCE.
 ```
 
 These are just a subset of many parameters in the FORCE parameter file - SADASADAM will create a default FORCE parameter file

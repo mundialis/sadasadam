@@ -183,7 +183,12 @@ class ForceProcess:
         target_proj_epsg: int = 25832,
         n_procs: int = 1,
         n_threads: int = 2,
+        max_cloud_cover_frame: int = 100,
         cloud_buffer: int = 300,
+        shadow_buffer: int = 90,
+        cirrus_buffer: int = 0,
+        cloud_threshold: float = 0.225,
+        shadow_threshold: float = 0.02,
     ) -> None:
         """Create a config file needed for L2 processing."""
         config_file_dummy = os.path.join(self.param_dir, "l2ps_dummy.prm")
@@ -208,11 +213,15 @@ class ForceProcess:
             # "ERASE_CLOUDS = TRUE",
             # this means all scenes will be processed regardless of cloud
             # cover. The cloud cover limit is already applied during download:
-            "MAX_CLOUD_COVER_FRAME = 100",
+            f"MAX_CLOUD_COVER_FRAME = {max_cloud_cover_frame}",
             # this means that no FORCE tile is taken out of the calculation,
             # even if it has 100% cloud cover:
             "MAX_CLOUD_COVER_TILE = 100",
             f"CLOUD_BUFFER  = {cloud_buffer}",
+            f"SHADOW_BUFFER = {shadow_buffer}",
+            f"CIRRUS_BUFFER = {cirrus_buffer}",
+            f"CLOUD_THRESHOLD = {cloud_threshold}",
+            f"SHADOW_THRESHOLD = {shadow_threshold}",
             f"NPROC = {n_procs}",
             f"NTHREAD = {n_threads}",
             # COG output deadlocks force-l2ps while building the QAI.tif
